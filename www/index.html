@@ -50,7 +50,6 @@
     .drag-handle:active {
       cursor: grabbing;
     }
-    /* Custom Scrollbar */
     ::-webkit-scrollbar { width: 5px; height: 5px; }
     ::-webkit-scrollbar-track { background: #0f172a; }
     ::-webkit-scrollbar-thumb { background: #334155; border-radius: 9999px; }
@@ -115,9 +114,7 @@
       </div>
 
       <!-- Current Next Stop Quick Card -->
-      <div id="nextStopCard" class="bg-slate-900 border border-emerald-500/40 rounded-2xl p-4 shadow-lg">
-        <!-- Populated dynamically -->
-      </div>
+      <div id="nextStopCard" class="bg-slate-900 border border-emerald-500/40 rounded-2xl p-4 shadow-lg"></div>
 
       <!-- Quick Actions Grid -->
       <div class="grid grid-cols-2 gap-2.5">
@@ -159,7 +156,7 @@
         <div class="flex items-center justify-between mb-3">
           <h2 class="font-bold text-sm text-white">تفکیک مرسولات بر اساس خیابان‌های پخش شما</h2>
           <button onclick="sortByMashhadZones()" class="text-xs bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1 rounded-lg font-medium">
-            مرتب‌سازی خودکار کل مسیر با این پهنه‌ها
+            مرتب‌سازی خودکار کل مسیر
           </button>
         </div>
         <div id="zoneStatsContainer" class="grid grid-cols-2 gap-2 text-xs"></div>
@@ -172,7 +169,7 @@
       <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 space-y-3">
         <div class="flex items-center justify-between">
           <div>
-            <h2 class="font-bold text-sm text-white">چیدمان مسیر و ارسال به «نشان»</h2>
+            <h2 class="font-bold text-sm text-white">چیدمان مسیر و ارسال دقیق به «نشان»</h2>
             <p class="text-[11px] text-slate-400">انگشت خود را روی <span class="text-sky-400 font-bold">☰</span> نگه دارید و مرسوله را بالا یا پایین بکشید</p>
           </div>
           <button onclick="toggleMapModal()" class="text-xs bg-sky-600/20 border border-sky-500/40 text-sky-300 px-3 py-1.5 rounded-xl font-bold">
@@ -234,7 +231,7 @@
           <div id="qr-reader" class="w-full"></div>
           <div id="cameraPlaceholder" class="p-6 text-center space-y-3">
             <div class="text-4xl">📷</div>
-            <p class="text-xs text-slate-300">برای اسکن مستقیم بارکد، دکمه زیر را بزنید یا از گزینه «دوربین مستقیم سیستم» استفاده کنید.</p>
+            <p class="text-xs text-slate-300">برای اسکن مستقیم بارکد، دکمه زیر را بزنید یا از گزینه «عکس از بارکد» استفاده کنید.</p>
           </div>
         </div>
 
@@ -248,11 +245,11 @@
           </button>
         </div>
 
-        <!-- Fallback Native Camera Capture (Works 100% even if WebRTC is blocked) -->
+        <!-- Fallback Native Camera Capture -->
         <div class="bg-slate-950 border border-slate-800 rounded-xl p-3 flex items-center justify-between">
           <div>
             <div class="text-xs font-bold text-sky-400">اسکن با عکس‌برداری مستقیم دوربین گوشی</div>
-            <div class="text-[11px] text-slate-400">اگر دوربین زنده در گوشی شما باز نشد از این دکمه استفاده کنید</div>
+            <div class="text-[11px] text-slate-400">باز شدن مستقیم دوربین اصلی اندروید برای خواندن بارکد</div>
           </div>
           <label class="bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold px-3.5 py-2 rounded-xl cursor-pointer shrink-0">
             📸 عکس از بارکد
@@ -272,12 +269,11 @@
 
     <!-- TAB 4: IMPORT EXCEL / MANUAL ADD -->
     <section id="tab-import" class="tab-content hidden space-y-4">
-      <!-- Excel Import Card -->
       <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
         <div class="flex items-center justify-between">
           <div>
             <h2 class="font-bold text-sm text-white">ورود دسته‌جمعی از فایل اکسل (XLSX / CSV)</h2>
-            <p class="text-[11px] text-slate-400">تشخیص خودکار ستون‌ها + تشخیص هوشمند خیابان و زوج/فرد مشهد</p>
+            <p class="text-[11px] text-slate-400">تشخیص خودکار ستون‌ها + استخراج دقیق کوچه برای مسیریاب نشان</p>
           </div>
           <button onclick="downloadSampleTemplate()" class="text-xs bg-slate-800 border border-slate-700 text-emerald-400 px-2.5 py-1.5 rounded-xl">
             ⬇️ دانلود فایل نمونه
@@ -328,7 +324,7 @@
         <div class="grid grid-cols-2 gap-2.5 text-xs">
           <input id="addName" type="text" placeholder="نام گیرنده" class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white" />
           <input id="addPhone" type="tel" placeholder="شماره موبایل (مثلاً 0915...)" class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white" />
-          <input id="addAddress" type="text" placeholder="آدرس (مثلاً سیدرضی 42 پلاک 18 یا امامت 74)" class="col-span-2 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white" />
+          <input id="addAddress" type="text" placeholder="آدرس (مثلاً سیدرضی 57 پلاک 14 یا جلال 48)" class="col-span-2 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white" />
           <input id="addBarcode" type="text" placeholder="بارکد مرسوله (اختیاری)" class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white" />
           <input id="addCode" type="text" placeholder="کد تحویل (اختیاری)" class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white" />
         </div>
@@ -385,8 +381,9 @@
 
       <div class="space-y-2.5 text-xs">
         <div class="bg-slate-950 border border-slate-800 rounded-xl p-3">
-          <div class="text-slate-400 mb-1">آدرس دقیق (پهنه مشهد):</div>
+          <div class="text-slate-400 mb-1">آدرس کامل روی بسته:</div>
           <div id="modalAddress" class="text-sm font-bold text-white leading-relaxed"></div>
+          <div id="modalNeshanQueryPreview" class="text-[11px] text-sky-400 mt-1.5 bg-sky-950/40 border border-sky-800/40 px-2.5 py-1 rounded-lg"></div>
           <div id="modalZoneHint" class="text-[11px] text-emerald-400 mt-1 font-medium"></div>
         </div>
 
@@ -407,7 +404,7 @@
         <!-- Direct Neshan Navigation Button -->
         <button id="modalNeshanBtn" class="w-full bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 text-white font-bold py-3 rounded-xl shadow flex items-center justify-center gap-2 text-xs">
           <span>🧭</span>
-          <span>مسیریابی مستقیم در نرم‌افزار «نشان» (Neshan)</span>
+          <span>جستجو و مسیریابی دقیق کوچه در «نشان»</span>
         </button>
 
         <!-- Optional Delivery Code Input -->
@@ -449,8 +446,8 @@
   <div id="mapModal" class="fixed inset-0 z-50 hidden bg-black/85 flex flex-col">
     <div class="bg-slate-900 border-b border-slate-800 px-4 py-3 flex items-center justify-between">
       <div>
-        <h3 class="font-bold text-sm text-white">نقشه ایستگاه‌های پخش مشهد (آزادشهر و حومه)</h3>
-        <p class="text-[11px] text-slate-400">روی هر پین بزنید تا مستقیم وارد مسیریاب «نشان» شود</p>
+        <h3 class="font-bold text-sm text-white">نقشه ایستگاه‌های پخش مشهد (آزادشهر و قاسم‌آباد)</h3>
+        <p class="text-[11px] text-slate-400">روی هر پین بزنید تا کوچه دقیق داخل «نشان» باز شود</p>
       </div>
       <button onclick="toggleMapModal()" class="bg-slate-800 text-white px-3 py-1.5 rounded-xl text-xs font-bold">بستن نقشه ✕</button>
     </div>
@@ -473,8 +470,8 @@
         <li>• <b>دانش‌آموز و آموزگار:</b> تفکیک کامل کوچه‌ها و پلاک‌های زوج و فرد</li>
         <li>• <b>فلاحی (قاسم‌آباد):</b> محدوده فلاحی ۲ تا ۶۲</li>
       </ul>
-      <p class="text-[11px] text-slate-400 bg-slate-950 p-2.5 rounded-xl border border-slate-800">
-        هنگام ورود اکسل یا ثبت دستی، برنامه به صورت خودکار خیابان، شماره کوچه و زوج یا فرد بودن را تشخیص می‌دهد و با زدن دکمه «مسیریابی در نشان»، آدرس کامل با پیش‌وند مشهد در نرم‌افزار نشان باز می‌شود.
+      <p class="text-[11px] text-emerald-300 bg-slate-950 p-2.5 rounded-xl border border-slate-800">
+        <b>اصلاحیه مسیریاب نشان:</b> برنامه به صورت خودکار شماره پلاک و واحد را از انتهای آدرس جدا می‌کند و عبارت دقیق مثلاً <b>«مشهد، بلوار سیدرضی، سیدرضی ۵۷»</b> را به جستجوی نشان می‌فرستد تا دیگر خیابان اشتباه (مثل سروش) باز نشود.
       </p>
     </div>
   </div>
@@ -507,9 +504,9 @@
 
   <script>
     /**************************************************************
-     * 1. PERSIAN NORMALIZATION & MASHHAD ZONE ENGINE
+     * 1. PERSIAN NORMALIZATION & ACCURATE MASHHAD ADDRESS ENGINE
      **************************************************************/
-    const STORAGE_KEY = 'TIPAXYAR_MASHHAD_PARCELS_V3';
+    const STORAGE_KEY = 'TIPAXYAR_MASHHAD_PARCELS_V4';
     let parcels = [];
     let selectedParcelId = null;
     let html5QrScanner = null;
@@ -534,46 +531,123 @@
         .trim();
     }
 
-    // Mashhad Street Coordinates & Territory Engine
+    /**
+     * Real Mashhad Geolocation & Neshan Search Query Builder
+     * - Azadshahr streets (Emamat, Jalal, Seyed Razi, Danesh Amooz, Amoozgar) run South-West (Vakilabad) to North-East (Mehran).
+     * - Calling geo:0,0?q=... forces Neshan to search the exact street & alley name instead of locking onto a wrong raw coordinate!
+     */
     const MASHHAD_STREETS = [
-      { key: 'سیدرضی', regex: /(سید\s*رضی|سیدرضی)\s*(\d+)?/i, baseLat: 36.3255, baseLng: 59.5270, orderWeight: 10 },
-      { key: 'امامت', regex: /(امامت)\s*(\d+)?/i, baseLat: 36.3295, baseLng: 59.5365, orderWeight: 20 },
-      { key: 'جلال', regex: /(جلال\s*آل\s*احمد|جلال)\s*(\d+)?/i, baseLat: 36.3275, baseLng: 59.5320, orderWeight: 30 },
-      { key: 'استقلال', regex: /(استقلال)\s*(\d+)?/i, baseLat: 36.3230, baseLng: 59.5410, orderWeight: 40 },
-      { key: 'معلم', regex: /(معلم)\s*(\d+)?/i, baseLat: 36.3320, baseLng: 59.5210, orderWeight: 50 },
-      { key: 'دانش‌آموز', regex: /(دانش\s*آموز|دانش‌آموز)\s*(\d+)?/i, baseLat: 36.3340, baseLng: 59.5120, orderWeight: 60 },
-      { key: 'آموزگار', regex: /(آموزگار)\s*(\d+)?/i, baseLat: 36.3365, baseLng: 59.5035, orderWeight: 70 },
-      { key: 'فلاحی', regex: /(فلاحی|قاسم\s*آباد|قاسم‌آباد)\s*(\d+)?/i, baseLat: 36.3610, baseLng: 59.4890, orderWeight: 80 }
+      {
+        key: 'سیدرضی',
+        fullTitle: 'بلوار سیدرضی',
+        regex: /(سید\s*رضی|سیدرضی)\s*(\d+)?/i,
+        // Seyed Razi 1 (at Vakilabad: 36.3225, 59.5125) -> Seyed Razi 57 (near Mehran: 36.3385, 59.5245)
+        startLat: 36.3225, startLng: 59.5125, dLat: 0.00028, dLng: 0.00021,
+        orderWeight: 10
+      },
+      {
+        key: 'امامت',
+        fullTitle: 'بلوار امامت',
+        regex: /(امامت)\s*(\d+)?/i,
+        // Emamat 1 (at Vakilabad: 36.3185, 59.5235) -> Emamat 74 (near Mehran: 36.3355, 59.5355)
+        startLat: 36.3185, startLng: 59.5235, dLat: 0.00024, dLng: 0.00017,
+        orderWeight: 20
+      },
+      {
+        key: 'جلال',
+        fullTitle: 'جلال آل احمد',
+        regex: /(جلال\s*آل\s*احمد|جلال)\s*(\d+)?/i,
+        // Jalal 1 (at Vakilabad: 36.3205, 59.5180) -> Jalal 72 (near Mehran: 36.3370, 59.5300)
+        startLat: 36.3205, startLng: 59.5180, dLat: 0.00025, dLng: 0.00018,
+        orderWeight: 30
+      },
+      {
+        key: 'استقلال',
+        fullTitle: 'بلوار استقلال',
+        regex: /(استقلال)\s*(\d+)?/i,
+        startLat: 36.3210, startLng: 59.5320, dLat: 0.00015, dLng: -0.00180,
+        orderWeight: 40
+      },
+      {
+        key: 'معلم',
+        fullTitle: 'بلوار معلم',
+        regex: /(معلم)\s*(\d+)?/i,
+        startLat: 36.3265, startLng: 59.5360, dLat: 0.00022, dLng: -0.00075,
+        orderWeight: 50
+      },
+      {
+        key: 'دانش‌آموز',
+        fullTitle: 'بلوار دانش آموز',
+        regex: /(دانش\s*آموز|دانش‌آموز)\s*(\d+)?/i,
+        startLat: 36.3250, startLng: 59.5065, dLat: 0.00028, dLng: 0.00020,
+        orderWeight: 60
+      },
+      {
+        key: 'آموزگار',
+        fullTitle: 'بلوار آموزگار',
+        regex: /(آموزگار)\s*(\d+)?/i,
+        startLat: 36.3280, startLng: 59.4995, dLat: 0.00026, dLng: 0.00019,
+        orderWeight: 70
+      },
+      {
+        key: 'فلاحی',
+        fullTitle: 'قاسم آباد، بلوار فلاحی',
+        regex: /(فلاحی)\s*(\d+)?/i,
+        startLat: 36.3530, startLng: 59.4950, dLat: 0.00022, dLng: -0.00055,
+        orderWeight: 80
+      }
     ];
+
+    function buildCleanNeshanQuery(rawAddress, matchedStreet, alleyNumber) {
+      const clean = normalizePersianText(rawAddress);
+
+      // If we recognized the exact Mashhad street & alley (e.g., سیدرضی 57), build an unmistakable Neshan query
+      if (matchedStreet && alleyNumber) {
+        // Also check if there is a sub-alley like "ممیز 3" or "/3" or "چهارراه اول"
+        return `مشهد، ${matchedStreet.fullTitle}، ${matchedStreet.key} ${alleyNumber}`;
+      }
+
+      // Otherwise strip out building/plaque/unit/floor noise that confuses Neshan search
+      let stripped = clean
+        .replace(/(پلاک|پ|واحد|طبقه|زنگ)\s*[\d\w\s،,-]+/gi, '')
+        .replace(/،\s*،/g, '،')
+        .trim();
+
+      if (!stripped.includes('مشهد')) {
+        stripped = `مشهد، ${stripped}`;
+      }
+      return stripped;
+    }
 
     function analyzeMashhadAddress(rawAddress) {
       const clean = normalizePersianText(rawAddress);
       let zone = 'سایر';
       let alleyNumber = null;
-      let parity = 'نامشخص'; // زوج یا فرد
+      let parity = 'نامشخص';
       let territoryStatus = 'خارج از محدوده تعریف‌شده';
       let correlationNote = '';
-      let lat = 36.3280;
-      let lng = 59.5280;
+      let lat = 36.3290;
+      let lng = 59.5210;
       let orderWeight = 99;
+      let matchedStreetObj = null;
 
       for (const st of MASHHAD_STREETS) {
         const match = clean.match(st.regex);
         if (match) {
+          matchedStreetObj = st;
           zone = st.key;
           orderWeight = st.orderWeight;
           if (match[2]) {
             alleyNumber = parseInt(match[2], 10);
             parity = (alleyNumber % 2 === 0) ? 'زوج' : 'فرد';
           }
-          const offset = alleyNumber ? (alleyNumber - 30) * 0.00025 : 0;
-          lat = +(st.baseLat + offset).toFixed(6);
-          lng = +(st.baseLng + offset).toFixed(6);
+          const n = alleyNumber || 20;
+          lat = +(st.startLat + n * st.dLat).toFixed(6);
+          lng = +(st.startLng + n * st.dLng).toFixed(6);
           break;
         }
       }
 
-      // Specific Territory Rules requested by user
       if (zone === 'سیدرضی' && alleyNumber !== null) {
         territoryStatus = (alleyNumber >= 24 && alleyNumber <= 63) ? `داخل محدوده (سیدرضی ${alleyNumber} - ${parity})` : `سیدرضی ${alleyNumber} (خارج بازه ۲۴-۶۳)`;
       } else if (zone === 'جلال' && alleyNumber !== null) {
@@ -594,12 +668,15 @@
         }
       }
 
+      const neshanQuery = buildCleanNeshanQuery(clean, matchedStreetObj, alleyNumber);
+
       return {
         zone,
         alleyNumber: alleyNumber || 0,
         parity,
         territoryStatus,
         correlationNote,
+        neshanQuery,
         lat,
         lng,
         orderWeight
@@ -607,19 +684,22 @@
     }
 
     /**************************************************************
-     * 2. NESHAN NAVIGATION INTEGRATION (DIRECT DEEP LINK)
+     * 2. FIXED NESHAN NAVIGATION (EXACT TEXT SEARCH VIA geo:0,0?q=)
      **************************************************************/
     function openInNeshan(parcelId) {
       const p = parcels.find(x => x.id === parcelId);
       if (!p) return;
 
-      const cleanAddr = normalizePersianText(p.address);
-      const fullMashhadAddress = cleanAddr.includes('مشهد') ? cleanAddr : `مشهد، ${cleanAddr}`;
+      // Recalculate clean query to make sure old cached items also get exact query
+      const meta = analyzeMashhadAddress(p.address);
+      const exactQuery = meta.neshanQuery;
 
-      // Calling Android/Browser Geo URI with exact Mashhad address query
-      // On Android with Neshan installed, geo:0,0?q=... directly opens Neshan with the exact address pre-filled!
-      const geoUri = `geo:${p.lat || 36.3280},${p.lng || 59.5280}?q=${encodeURIComponent(fullMashhadAddress)}`;
-      window.location.href = geoUri;
+      // CRITICAL FIX:
+      // Using geo:0,0?q=... (with 0,0 instead of approximate coordinates) forces Neshan
+      // to search the exact Persian street & alley text ("مشهد، بلوار سیدرضی، سیدرضی 57")
+      // instead of locking onto a wrong raw coordinate in Soroush!
+      const neshanGeoUri = `geo:0,0?q=${encodeURIComponent(exactQuery)}`;
+      window.location.href = neshanGeoUri;
     }
 
     /**************************************************************
@@ -631,6 +711,8 @@
         try {
           parcels = JSON.parse(saved);
           if (Array.isArray(parcels) && parcels.length > 0) {
+            // Refresh address metadata for any stored items
+            parcels = parcels.map(p => ({ ...p, ...analyzeMashhadAddress(p.address) }));
             renderAll();
             return;
           }
@@ -692,7 +774,6 @@
         delayOnTouchOnly: true,
         touchStartThreshold: 4,
         onEnd: function () {
-          // Reorder array based on DOM order after touch drag
           const cards = Array.from(el.querySelectorAll('[data-parcel-id]'));
           const newOrderIds = cards.map(c => c.getAttribute('data-parcel-id'));
           const reordered = [];
@@ -700,7 +781,6 @@
             const found = parcels.find(p => p.id === id);
             if (found) reordered.push(found);
           });
-          // Append any filtered-out items at the end so nothing is lost
           parcels.forEach(p => {
             if (!reordered.includes(p)) reordered.push(p);
           });
@@ -778,7 +858,6 @@
       document.getElementById('dashProgressText').textContent = pct + '%';
       document.getElementById('dashProgressBar').style.width = pct + '%';
 
-      // Next Stop Card
       const nextStop = parcels.find(p => p.status === 'آماده توزیع');
       const nextCard = document.getElementById('nextStopCard');
       if (nextStop) {
@@ -790,7 +869,8 @@
             <span class="text-[11px] text-slate-400">${nextStop.barcode || ''}</span>
           </div>
           <div class="font-bold text-base text-white mb-1">${nextStop.recipient}</div>
-          <div class="text-xs text-slate-300 mb-3 leading-relaxed">${nextStop.address}</div>
+          <div class="text-xs text-slate-300 mb-1 leading-relaxed">${nextStop.address}</div>
+          <div class="text-[11px] text-sky-400 mb-3">📍 ارسالی به نشان: ${nextStop.neshanQuery}</div>
           <div class="grid grid-cols-3 gap-2">
             <button onclick="openInNeshan('${nextStop.id}')" class="bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold py-2.5 rounded-xl flex items-center justify-center gap-1">
               🧭 مسیریاب نشان
@@ -811,7 +891,6 @@
         `;
       }
 
-      // Zone Stats Breakdown
       const zones = ['سیدرضی', 'امامت', 'جلال', 'استقلال', 'معلم', 'دانش‌آموز', 'آموزگار', 'فلاحی'];
       const zoneContainer = document.getElementById('zoneStatsContainer');
       zoneContainer.innerHTML = zones.map(z => {
@@ -899,7 +978,7 @@
               <!-- Quick Action Row inside Card -->
               <div class="pt-1.5 flex items-center gap-1.5" onclick="event.stopPropagation()">
                 <button onclick="openInNeshan('${p.id}')" class="flex-1 bg-sky-600/20 hover:bg-sky-600/30 border border-sky-500/40 text-sky-300 text-[11px] font-bold py-1.5 rounded-xl flex items-center justify-center gap-1">
-                  🧭 مسیریاب نشان
+                  🧭 نشان (${p.zone}${p.alleyNumber ? ' ' + p.alleyNumber : ''})
                 </button>
                 <a href="tel:${p.phone}" class="bg-slate-800 text-slate-200 text-[11px] font-bold px-3 py-1.5 rounded-xl">
                   📞 تماس
@@ -930,6 +1009,7 @@
       document.getElementById('modalStopBadge').textContent = `ایستگاه #${p.stopOrder} • ${p.zone} (${p.parity})`;
       document.getElementById('modalRecipientName').textContent = p.recipient;
       document.getElementById('modalAddress').textContent = p.address;
+      document.getElementById('modalNeshanQueryPreview').textContent = `🔍 عبارت ارسالی به نشان: «${p.neshanQuery}»`;
       document.getElementById('modalZoneHint').textContent = p.territoryStatus + (p.correlationNote ? ' | ' + p.correlationNote : '');
       document.getElementById('modalPhone').textContent = p.phone || 'ثبت نشده';
       document.getElementById('modalCallLink').href = p.phone ? `tel:${p.phone}` : '#';
@@ -950,7 +1030,6 @@
       const p = parcels.find(x => x.id === selectedParcelId);
       if (!p) return;
 
-      // Delivery code is 100% optional!
       p.deliveryCode = normalizePersianText(document.getElementById('modalDeliveryCode').value);
       p.notes = document.getElementById('modalNotes').value.trim();
       p.status = newStatus;
@@ -1138,7 +1217,7 @@
       saveToStorage();
       document.getElementById('importMappingBox').classList.add('hidden');
       renderAll();
-      alert(`${addedCount} مرسوله با موفقیت وارد و پهنه‌بندی مشهد روی آن‌ها اعمال شد.`);
+      alert(`${addedCount} مرسوله با موفقیت وارد و آدرس‌های نشان برای آن‌ها تنظیم شد.`);
       switchTab('route');
     }
 
@@ -1182,7 +1261,7 @@
 
     function downloadSampleTemplate() {
       const sample = [
-        { 'نام گیرنده': 'رضا محمدی', 'موبایل': '09151112233', 'آدرس کامل': 'مشهد، سیدرضی 44، پلاک 12', 'بارکد': '640199001', 'توضیحات': 'زنگ اول' },
+        { 'نام گیرنده': 'رضا محمدی', 'موبایل': '09151112233', 'آدرس کامل': 'مشهد، سیدرضی 57، پلاک 12', 'بارکد': '640199001', 'توضیحات': 'زنگ اول' },
         { 'نام گیرنده': 'مینا کریمی', 'موبایل': '09154445566', 'آدرس کامل': 'مشهد، جلال آل احمد 52، پلاک 8', 'بارکد': '640199002', 'توضیحات': '' }
       ];
       const ws = XLSX.utils.json_to_sheet(sample);
@@ -1203,6 +1282,7 @@
         'خیابان / پهنه': p.zone,
         'زوج / فرد': p.parity,
         'آدرس کامل': p.address,
+        'عبارت جستجوی نشان': p.neshanQuery,
         'بارکد مرسوله': p.barcode,
         'کد تحویل (اختیاری)': p.deliveryCode,
         'وضعیت تحویل': p.status,
@@ -1239,14 +1319,13 @@
 
     function initOrUpdateMap() {
       if (!leafletMapInstance) {
-        leafletMapInstance = L.map('leafletMap').setView([36.3290, 59.5280], 13);
+        leafletMapInstance = L.map('leafletMap').setView([36.3295, 59.5210], 14);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
           attribution: '© OpenStreetMap'
         }).addTo(leafletMapInstance);
       }
       leafletMapInstance.invalidateSize();
 
-      // Clear previous layers
       leafletMapInstance.eachLayer(layer => {
         if (layer instanceof L.Marker || layer instanceof L.Polyline) {
           leafletMapInstance.removeLayer(layer);
@@ -1263,7 +1342,7 @@
               <b>#${p.stopOrder} - ${p.recipient}</b><br/>
               <span style="font-size:11px;">${p.address}</span><br/>
               <button onclick="openInNeshan('${p.id}')" style="margin-top:6px;background:#0284c7;color:#fff;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:bold;">
-                🧭 مسیریابی در نشان
+                🧭 باز کردن «${p.zone} ${p.alleyNumber || ''}» در نشان
               </button>
             </div>
           `);
