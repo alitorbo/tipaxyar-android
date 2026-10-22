@@ -24,10 +24,7 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
-      - name: 4. Setup Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: 5. Initialize Capacitor Android Project
+      - name: 4. Initialize Capacitor Android Project
         run: |
           mkdir -p www
           if [ -f "index.html" ]; then cp index.html www/index.html; fi
@@ -39,19 +36,7 @@ jobs:
           npx cap sync android
           sed -i 's/>TipaxYar</>تیپاکس‌یار</g' android/app/src/main/res/values/strings.xml
 
-      - name: 6. Build Installable APK via Gradle
+      - name: 5. Build Installable APK via Gradle
         working-directory: ./android
-        run: |
-          chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon
-
-      - name: 7. Prepare Output Deliverables
-        run: |
-          mkdir -p output
-          cp android/app/build/outputs/apk/debug/app-debug.apk output/TipaxYar-debug.apk
-
-      - name: 8. Upload APK as Downloadable Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: TipaxYar-Installable-APK
-          path: output/TipaxYar-debug.apk
+        env:
+          ANDROID_HOME: /usr/local/lib/android
