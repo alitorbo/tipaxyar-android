@@ -7,7 +7,7 @@ on:
 
 jobs:
   build-android-apk:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: 1. Checkout Repository
@@ -16,30 +16,34 @@ jobs:
       - name: 2. Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
 
-      - name: 3. Setup JDK 17 for Android Gradle Plugin
+      - name: 3. Setup JDK 21
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '17'
+          java-version: '21'
 
       - name: 4. Setup Android SDK
         uses: android-actions/setup-android@v3
 
       - name: 5. Initialize Capacitor Android Project
         run: |
+          mkdir -p www
+          if [ -f "index.html" ]; then cp index.html www/index.html; fi
+          if [ ! -f "www/index.html" ]; then echo "<h1>TipaxYar</h1>" > www/index.html; fi
           npm init -y
-          npm install @capacitor/core @capacitor/cli @capacitor/android
-          npx cap init "تیپاکس‌یار" "ir.tipaxyar.delivery" --web-dir www
+          npm install @capacitor/core@6 @capacitor/cli@6 @capacitor/android@6
+          npx cap init "TipaxYar" "ir.tipaxyar.delivery" --web-dir www
           npx cap add android
           npx cap sync android
+          sed -i 's/>TipaxYar</>تیپاکس‌یار</g' android/app/src/main/res/values/strings.xml
 
       - name: 6. Build Installable APK via Gradle
         working-directory: ./android
         run: |
           chmod +x gradlew
-          ./gradlew assembleDebug
+          ./gradlew assembleDebug --no-daemon
 
       - name: 7. Prepare Output Deliverables
         run: |
