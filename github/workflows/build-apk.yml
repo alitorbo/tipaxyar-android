@@ -1,0 +1,53 @@
+name: Build TipaxYar Android APK
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+jobs:
+  build-android-apk:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 1. Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 2. Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 3. Setup JDK 17 for Android Gradle Plugin
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: 4. Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: 5. Initialize Capacitor Android Project
+        run: |
+          npm init -y
+          npm install @capacitor/core @capacitor/cli @capacitor/android
+          npx cap init "تیپاکس‌یار" "ir.tipaxyar.delivery" --web-dir www
+          npx cap add android
+          npx cap sync android
+
+      - name: 6. Build Installable APK via Gradle
+        working-directory: ./android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: 7. Prepare Output Deliverables
+        run: |
+          mkdir -p output
+          cp android/app/build/outputs/apk/debug/app-debug.apk output/TipaxYar-debug.apk
+
+      - name: 8. Upload APK as Downloadable Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: TipaxYar-Installable-APK
+          path: output/TipaxYar-debug.apk
