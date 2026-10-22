@@ -1,4 +1,4 @@
-name: Build TipaxYar Android APK
+name: Build TipaxYar Mashhad APK
 
 on:
   push:
@@ -26,17 +26,17 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
-      - name: Initialize Capacitor Android Project
+      - name: Initialize Capacitor & Inject Camera/Neshan Permissions
         run: |
           mkdir -p www
           if [ -f "index.html" ]; then cp index.html www/index.html; fi
-          if [ ! -f "www/index.html" ]; then echo "TipaxYar" > www/index.html; fi
           npm init -y
           npm install @capacitor/core@6 @capacitor/cli@6 @capacitor/android@6
-          npx cap init TipaxYar ir.tipaxyar.delivery --web-dir www
+          npx cap init TipaxYarMashhad ir.tipaxyar.mashhad --web-dir www
           npx cap add android
           npx cap sync android
-          sed -i 's/TipaxYar/تیپاکس‌یار/g' android/app/src/main/res/values/strings.xml
+          sed -i 's/TipaxYarMashhad/تیپاکس‌یار مشهد/g' android/app/src/main/res/values/strings.xml
+          sed -i 's/<application/<uses-permission android:name="android.permission.CAMERA" \/><uses-feature android:name="android.hardware.camera" android:required="false" \/><application/g' android/app/src/main/AndroidManifest.xml
 
       - name: Build Installable APK via Gradle
         working-directory: ./android
@@ -50,10 +50,10 @@ jobs:
       - name: Prepare Output Deliverables
         run: |
           mkdir -p output
-          cp android/app/build/outputs/apk/debug/app-debug.apk output/TipaxYar-debug.apk
+          cp android/app/build/outputs/apk/debug/app-debug.apk output/TipaxYar-Mashhad.apk
 
       - name: Upload APK as Downloadable Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: TipaxYar-Installable-APK
-          path: output/TipaxYar-debug.apk
+          name: TipaxYar-Mashhad-APK
+          path: output/TipaxYar-Mashhad.apk
