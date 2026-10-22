@@ -1,0 +1,2013 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>تیپاکس‌یار | دستیار هوشمند توزیع مرسولات</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Vazirmatn Persian Font -->
+  <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
+  <!-- SheetJS for real XLSX/CSV Import & Export -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <!-- Leaflet Map for Offline/Online Route Visualization -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- HTML5-QRCode for Real Camera Barcode Scanning -->
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    body {
+      font-family: 'Vazirmatn', sans-serif;
+      background-color: #f1f5f9;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .persian-num {
+      font-feature-settings: "ss01";
+    }
+    /* Print Sheet Styling */
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      #printable-area, #printable-area * {
+        visibility: visible;
+      }
+      #printable-area {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        background: white !important;
+        padding: 0 !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+    }
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+  </style>
+</head>
+<body class="text-slate-800 antialiased min-h-screen flex flex-col">
+
+  <!-- TOP HEADER BAR -->
+  <header class="bg-emerald-800 text-white shadow-md sticky top-0 z-30 no-print">
+    <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-emerald-600 flex items-center justify-center shadow-inner font-black text-lg border border-emerald-400">
+          TY
+        </div>
+        <div>
+          <h1 class="font-bold text-base sm:text-lg leading-tight flex items-center gap-2">
+            تیپاکس‌یار
+            <span class="text-xs bg-amber-400 text-slate-900 font-extrabold px-2 py-0.5 rounded-full">نسخه ۱.۴ اندروید</span>
+          </h1>
+          <p class="text-xs text-emerald-200 flex items-center gap-2 mt-0.5">
+            <span id="current-jalali-date"></span>
+            <span>•</span>
+            <span id="active-session-badge" class="underline cursor-pointer" onclick="switchTab('sessions')">شیفت فعال</span>
+          </p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button onclick="loadSampleDataWithToast()" title="بارگذاری داده آزمایشی" class="bg-emerald-700 hover:bg-emerald-600 text-xs px-2.5 py-2 rounded-lg border border-emerald-500 flex items-center gap-1.5 transition">
+          <i data-lucide="sparkles" class="w-4 h-4 text-amber-300"></i>
+          <span class="hidden sm:inline">داده نمونه</span>
+        </button>
+        <button onclick="switchTab('scanner')" title="اسکن بارکد / برچسب" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs px-3 py-2 rounded-lg shadow flex items-center gap-1.5 transition">
+          <i data-lucide="scan-line" class="w-4 h-4"></i>
+          <span>اسکن</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTENT CONTAINER -->
+  <main class="flex-1 max-w-4xl w-full mx-auto p-3 sm:p-4 pb-24 no-print">
+
+    <!-- 1. DASHBOARD TAB -->
+    <section id="tab-dashboard" class="space-y-4">
+      <!-- Current Session Banner -->
+      <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <div class="p-2.5 rounded-xl bg-emerald-50 text-emerald-700">
+            <i data-lucide="calendar-clock" class="w-6 h-6"></i>
+          </div>
+          <div>
+            <div class="text-xs text-slate-500">جلسه (شیفت) توزیع فعلی:</div>
+            <div class="font-bold text-slate-800 text-base" id="dash-session-title">شیفت صبح - منطقه ۲</div>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="switchTab('sessions')" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 rounded-xl font-medium transition">
+            تغییر / مدیریت شیفت‌ها
+          </button>
+          <button onclick="switchTab('import')" class="text-xs bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-xl font-medium flex items-center gap-1.5 transition">
+            <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
+            ورود اکسل
+          </button>
+        </div>
+      </div>
+
+      <!-- Progress Card -->
+      <div class="bg-gradient-to-l from-emerald-800 to-teal-700 rounded-2xl p-4 sm:p-5 text-white shadow-md">
+        <div class="flex justify-between items-center mb-2">
+          <span class="text-sm font-medium text-emerald-100">پیشرفت توزیع امروز</span>
+          <span id="dash-progress-text" class="text-xl font-black text-amber-300">۰٪</span>
+        </div>
+        <div class="w-full bg-emerald-950/60 h-3 rounded-full overflow-hidden">
+          <div id="dash-progress-bar" class="bg-amber-400 h-full transition-all duration-500" style="width: 0%"></div>
+        </div>
+        <div class="mt-4 flex flex-wrap items-center justify-between gap-2 text-xs text-emerald-100">
+          <div id="dash-next-stop-banner" class="flex items-center gap-1.5 font-medium">
+            <i data-lucide="navigation" class="w-4 h-4 text-amber-300"></i>
+            <span>ایستگاه بعدی: —</span>
+          </div>
+          <button onclick="openNextEligibleParcel()" class="bg-white/15 hover:bg-white/25 text-white px-3 py-1.5 rounded-lg font-semibold backdrop-blur-sm transition">
+            شروع / ادامه توزیع ←
+          </button>
+        </div>
+      </div>
+
+      <!-- Statistics Grid -->
+      <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <div onclick="filterParcelsAndGo('ALL')" class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm cursor-pointer hover:border-emerald-500 transition">
+          <div class="flex items-center justify-between text-slate-400 mb-1">
+            <span class="text-xs font-medium text-slate-500">کل مرسولات</span>
+            <i data-lucide="package" class="w-5 h-5 text-slate-600"></i>
+          </div>
+          <div id="stat-total" class="text-2xl font-black text-slate-800">0</div>
+        </div>
+
+        <div onclick="filterParcelsAndGo('DELIVERED')" class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm cursor-pointer hover:border-emerald-500 transition">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-xs font-medium text-emerald-700">تحویل موفق</span>
+            <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-600"></i>
+          </div>
+          <div id="stat-delivered" class="text-2xl font-black text-emerald-600">0</div>
+        </div>
+
+        <div onclick="filterParcelsAndGo('REMAINING')" class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm cursor-pointer hover:border-blue-500 transition">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-xs font-medium text-blue-700">باقی‌مانده در مسیر</span>
+            <i data-lucide="truck" class="w-5 h-5 text-blue-600"></i>
+          </div>
+          <div id="stat-remaining" class="text-2xl font-black text-blue-600">0</div>
+        </div>
+
+        <div onclick="filterParcelsAndGo('FAILED')" class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm cursor-pointer hover:border-rose-500 transition">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-xs font-medium text-rose-700">تلاش ناموفق / رسوب</span>
+            <i data-lucide="alert-octagon" class="w-5 h-5 text-rose-600"></i>
+          </div>
+          <div id="stat-failed" class="text-2xl font-black text-rose-600">0</div>
+        </div>
+
+        <div onclick="filterParcelsAndGo('NEEDS_REVIEW')" class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm cursor-pointer hover:border-amber-500 transition">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-xs font-medium text-amber-700">نیازمند اصلاح آدرس</span>
+            <i data-lucide="map-pin-off" class="w-5 h-5 text-amber-600"></i>
+          </div>
+          <div id="stat-review" class="text-2xl font-black text-amber-600">0</div>
+        </div>
+
+        <div onclick="switchTab('route')" class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm cursor-pointer hover:border-indigo-500 transition">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-xs font-medium text-indigo-700">ایستگاه فعلی</span>
+            <i data-lucide="flag" class="w-5 h-5 text-indigo-600"></i>
+          </div>
+          <div id="stat-current-stop" class="text-2xl font-black text-indigo-600">—</div>
+        </div>
+      </div>
+
+      <!-- Quick Actions Grid -->
+      <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm">
+        <h2 class="text-xs font-bold text-slate-500 mb-3">دسترسی سریع عملیاتی</h2>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+          <button onclick="switchTab('import')" class="flex flex-col items-center justify-center p-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-200 transition gap-1.5">
+            <i data-lucide="upload-cloud" class="w-6 h-6 text-emerald-700"></i>
+            <span class="text-xs font-bold">ورود اکسل / دستی</span>
+          </button>
+          <button onclick="switchTab('route')" class="flex flex-col items-center justify-center p-3 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-900 border border-indigo-200 transition gap-1.5">
+            <i data-lucide="route" class="w-6 h-6 text-indigo-700"></i>
+            <span class="text-xs font-bold">چیدمان و مسیریابی</span>
+          </button>
+          <button onclick="switchTab('scanner')" class="flex flex-col items-center justify-center p-3 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 transition gap-1.5">
+            <i data-lucide="qr-code" class="w-6 h-6 text-amber-700"></i>
+            <span class="text-xs font-bold">اسکنر بارکد و OCR</span>
+          </button>
+          <button onclick="switchTab('export')" class="flex flex-col items-center justify-center p-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 transition gap-1.5">
+            <i data-lucide="printer" class="w-6 h-6 text-slate-700"></i>
+            <span class="text-xs font-bold">خروجی اکسل و چاپ</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Empty State Helper -->
+      <div id="dash-empty-state" class="hidden bg-white rounded-2xl p-6 text-center border border-dashed border-slate-300">
+        <div class="w-12 h-12 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto mb-3">
+          <i data-lucide="package-plus" class="w-6 h-6"></i>
+        </div>
+        <h3 class="font-bold text-slate-800 text-base">هنوز مرسوله‌ای در این شیفت ثبت نشده است</h3>
+        <p class="text-xs text-slate-500 mt-1 max-w-md mx-auto leading-relaxed">
+          می‌توانید فایل اکسل (XLSX یا CSV) لیست توزیع را وارد کنید، یا برای بررسی فوری تمام قابلیت‌های برنامه، روی دکمه زیر بزنید تا ۸ مرسوله آزمایشی واقعی بارگذاری شود.
+        </p>
+        <div class="mt-4 flex flex-wrap justify-center gap-2">
+          <button onclick="loadSampleDataWithToast()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-sm transition">
+            بارگذاری ۸ مرسوله نمونه (تهران)
+          </button>
+          <button onclick="downloadSampleTemplate()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-4 py-2.5 rounded-xl border border-slate-300 transition">
+            دانلود فایل خام نمونه اکسل
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. IMPORT EXCEL / CSV & MANUAL ENTRY TAB -->
+    <section id="tab-import" class="hidden space-y-4">
+      <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+          <div>
+            <h2 class="font-bold text-slate-800 text-base">ورود گروهی مرسولات (Excel / CSV)</h2>
+            <p class="text-xs text-slate-500">پشتیبانی از حفظ صفر ابتدای موبایل، نرمال‌سازی حروف فارسی/عربی و تشخیص هوشمند ستون‌ها</p>
+          </div>
+          <button onclick="downloadSampleTemplate()" class="text-xs bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 px-3 py-2 rounded-xl font-bold flex items-center gap-1.5">
+            <i data-lucide="download" class="w-4 h-4"></i>
+            دانلود قالب نمونه XLSX
+          </button>
+        </div>
+
+        <!-- File Input Dropzone -->
+        <label class="block border-2 border-dashed border-emerald-400 bg-emerald-50/40 hover:bg-emerald-50 rounded-2xl p-6 text-center cursor-pointer transition">
+          <input type="file" id="excel-file-input" accept=".xlsx,.xls,.csv" class="hidden" onchange="handleFileSelect(event)" />
+          <i data-lucide="file-spreadsheet" class="w-10 h-10 text-emerald-600 mx-auto mb-2"></i>
+          <div class="font-bold text-sm text-slate-800">انتخاب فایل اکسل (.xlsx) یا (.csv)</div>
+          <div class="text-xs text-slate-500 mt-1">فایل لیست مرسولات را از حافظه گوشی انتخاب کنید</div>
+        </label>
+
+        <!-- Duplicate Handling Policy -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">سیاست برخورد با بارکدهای تکراری:</label>
+            <select id="import-dup-policy" class="w-full text-xs bg-white border border-slate-300 rounded-lg px-2.5 py-2">
+              <option value="SKIP">رد کردن بارکد تکراری (جلوگیری از تکرار)</option>
+              <option value="UPDATE">بروزرسانی اطلاعات مرسوله قبلی</option>
+              <option value="IMPORT_NEW">ثبت به عنوان رکورد مجزا</option>
+            </select>
+          </div>
+          <div class="flex items-center text-xs text-slate-500 leading-relaxed">
+            توجه: تمام اعداد فارسی و عربی در شماره تماس، کدپستی و بارکد به صورت خودکار استانداردسازی شده و صفر ابتدای شماره موبایل حفظ می‌گردد.
+          </div>
+        </div>
+
+        <!-- Step 2: Column Mapping & Preview (Shown after file selection) -->
+        <div id="import-mapping-section" class="hidden space-y-4 pt-3 border-t border-slate-200">
+          <h3 class="font-bold text-sm text-emerald-800 flex items-center gap-1.5">
+            <i data-lucide="Columns" class="w-4 h-4"></i>
+            گام دوم: تطبیق ستون‌های فایل اکسل
+          </h3>
+          <div id="column-mapping-controls" class="grid grid-cols-2 sm:grid-cols-4 gap-2.5"></div>
+
+          <div class="flex items-center justify-between pt-2">
+            <span id="import-preview-summary" class="text-xs font-bold text-slate-600"></span>
+            <button onclick="confirmAndCommitImport()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow flex items-center gap-1.5">
+              <i data-lucide="check-check" class="w-4 h-4"></i>
+              تایید و ثبت نهایی رکوردها در دیتابیس
+            </button>
+          </div>
+
+          <div class="overflow-x-auto border border-slate-200 rounded-xl max-h-64">
+            <table class="w-full text-right text-xs">
+              <thead class="bg-slate-100 text-slate-700 sticky top-0">
+                <tr>
+                  <th class="p-2 border-b">ردیف</th>
+                  <th class="p-2 border-b">گیرنده</th>
+                  <th class="p-2 border-b">موبایل</th>
+                  <th class="p-2 border-b">بارکد</th>
+                  <th class="p-2 border-b">آدرس کامل</th>
+                  <th class="p-2 border-b">اعتبارسنجی</th>
+                </tr>
+              </thead>
+              <tbody id="import-preview-tbody" class="divide-y divide-slate-100"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Manual Parcel Entry Card -->
+      <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm space-y-3">
+        <h3 class="font-bold text-sm text-slate-800 flex items-center gap-1.5">
+          <i data-lucide="plus-circle" class="w-4 h-4 text-emerald-600"></i>
+          ثبت دستی مرسوله تکی
+        </h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+          <div>
+            <label class="block text-slate-600 mb-1 font-medium">نام و نام خانوادگی گیرنده *</label>
+            <input id="man-name" type="text" placeholder="مثلاً: علی محمدی" class="w-full border border-slate-300 rounded-xl px-3 py-2 focus:border-emerald-600 outline-none" />
+          </div>
+          <div>
+            <label class="block text-slate-600 mb-1 font-medium">شماره موبایل *</label>
+            <input id="man-phone" type="tel" dir="ltr" placeholder="09123456789" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-right focus:border-emerald-600 outline-none" />
+          </div>
+          <div>
+            <label class="block text-slate-600 mb-1 font-medium">بارکد / کد رهگیری تیپاکس *</label>
+            <input id="man-barcode" type="text" dir="ltr" placeholder="TPX-40590012" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-right focus:border-emerald-600 outline-none" />
+          </div>
+          <div>
+            <label class="block text-slate-600 mb-1 font-medium">کد پستی ۱۰ رقمی</label>
+            <input id="man-postal" type="text" dir="ltr" placeholder="1456789123" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-right focus:border-emerald-600 outline-none" />
+          </div>
+          <div>
+            <label class="block text-slate-600 mb-1 font-medium">محله / منطقه توزیع</label>
+            <input id="man-district" type="text" placeholder="مثلاً: سعادت‌آباد" class="w-full border border-slate-300 rounded-xl px-3 py-2 focus:border-emerald-600 outline-none" />
+          </div>
+          <div>
+            <label class="block text-slate-600 mb-1 font-medium">یادداشت مرسوله / نوع پرداخت</label>
+            <input id="man-notes" type="text" placeholder="مثلاً: پس‌کرایه ۱۲۰ هزار تومان - زنگ سوم" class="w-full border border-slate-300 rounded-xl px-3 py-2 focus:border-emerald-600 outline-none" />
+          </div>
+          <div class="sm:col-span-2">
+            <label class="block text-slate-600 mb-1 font-medium">آدرس کامل پستی *</label>
+            <textarea id="man-address" rows="2" placeholder="خیابان اصلی، کوچه، پلاک، طبقه، واحد..." class="w-full border border-slate-300 rounded-xl px-3 py-2 focus:border-emerald-600 outline-none"></textarea>
+          </div>
+        </div>
+        <div class="flex justify-end">
+          <button onclick="addManualParcel()" class="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-5 py-2.5 rounded-xl shadow transition">
+            افزودن مرسوله به لیست توزیع
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. PARCEL LIST & SMART SEARCH TAB -->
+    <section id="tab-parcels" class="hidden space-y-3">
+      <!-- Search & Filter Bar -->
+      <div class="bg-white rounded-2xl p-3 border border-slate-200 shadow-sm space-y-2.5 sticky top-16 z-20">
+        <div class="relative">
+          <input id="parcel-search-input" type="text" oninput="renderParcelList()" placeholder="جستجو با نام گیرنده، بارکد، موبایل، آدرس یا کدپستی..." class="w-full bg-slate-50 border border-slate-300 rounded-xl pr-9 pl-3 py-2.5 text-xs focus:bg-white focus:border-emerald-600 outline-none" />
+          <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute right-3 top-3"></i>
+        </div>
+
+        <div class="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
+          <button onclick="setStatusFilter('ALL')" data-filter="ALL" class="filter-chip px-3 py-1.5 rounded-full font-bold bg-emerald-700 text-white whitespace-nowrap">همه</button>
+          <button onclick="setStatusFilter('REMAINING')" data-filter="REMAINING" class="filter-chip px-3 py-1.5 rounded-full font-medium bg-slate-100 text-slate-700 whitespace-nowrap">باقی‌مانده</button>
+          <button onclick="setStatusFilter('DELIVERED')" data-filter="DELIVERED" class="filter-chip px-3 py-1.5 rounded-full font-medium bg-slate-100 text-slate-700 whitespace-nowrap">تحویل‌شده</button>
+          <button onclick="setStatusFilter('FAILED')" data-filter="FAILED" class="filter-chip px-3 py-1.5 rounded-full font-medium bg-slate-100 text-slate-700 whitespace-nowrap">تلاش ناموفق</button>
+          <button onclick="setStatusFilter('NEEDS_REVIEW')" data-filter="NEEDS_REVIEW" class="filter-chip px-3 py-1.5 rounded-full font-medium bg-slate-100 text-slate-700 whitespace-nowrap">نیازمند اصلاح آدرس</button>
+        </div>
+      </div>
+
+      <!-- Parcels Container -->
+      <div id="parcels-list-container" class="space-y-2.5"></div>
+    </section>
+
+    <!-- 4. FLEXIBLE ROUTE PLANNING & MAP TAB -->
+    <section id="tab-route" class="hidden space-y-4">
+      <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h2 class="font-bold text-slate-800 text-base">مهندسی مسیر و چیدمان ایستگاه‌های توزیع</h2>
+            <p class="text-xs text-slate-500">تغییر ترتیب ایستگاه‌ها بدون هیچ‌گونه تداخل در کد تحویل یا وضعیت ثبت‌شده هر مرسوله</p>
+          </div>
+          <div class="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl text-xs">
+            <button id="btn-view-list" onclick="toggleRouteView('LIST')" class="px-3 py-1.5 rounded-lg bg-white shadow-sm font-bold text-slate-800">نمای لیست</button>
+            <button id="btn-view-map" onclick="toggleRouteView('MAP')" class="px-3 py-1.5 rounded-lg font-medium text-slate-600">نمای نقشه</button>
+          </div>
+        </div>
+
+        <!-- 8 Route Ordering Modes -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+          <button onclick="applyRouteMode('ORIGINAL')" class="p-2.5 rounded-xl border border-slate-200 hover:border-emerald-500 bg-slate-50 hover:bg-emerald-50 text-right transition">
+            <div class="font-bold text-slate-800">۱. ترتیب اولیه فایل</div>
+            <div class="text-[11px] text-slate-500 mt-0.5">مطابق ردیف ورود اکسل</div>
+          </button>
+
+          <button onclick="applyRouteMode('FORWARD')" class="p-2.5 rounded-xl border border-slate-200 hover:border-emerald-500 bg-slate-50 hover:bg-emerald-50 text-right transition">
+            <div class="font-bold text-slate-800">۲. ترتیب مستقیم (۱ به آخر)</div>
+            <div class="text-[11px] text-slate-500 mt-0.5">از اولین رکورد تا انتها</div>
+          </button>
+
+          <button onclick="applyRouteMode('REVERSE')" class="p-2.5 rounded-xl border border-slate-200 hover:border-emerald-500 bg-slate-50 hover:bg-emerald-50 text-right transition">
+            <div class="font-bold text-slate-800">۳. ترتیب معکوس (آخر به ۱)</div>
+            <div class="text-[11px] text-slate-500 mt-0.5">پخش از انتهای مسیر به ابتدا</div>
+          </button>
+
+          <button onclick="applyRouteMode('NEIGHBORHOOD')" class="p-2.5 rounded-xl border border-slate-200 hover:border-emerald-500 bg-slate-50 hover:bg-emerald-50 text-right transition">
+            <div class="font-bold text-slate-800">۶. دسته‌بندی محله‌ای</div>
+            <div class="text-[11px] text-slate-500 mt-0.5">تجمیع خیابان‌ها و محلات مشابه</div>
+          </button>
+
+          <button onclick="applyRouteMode('GEO_NEAREST')" class="p-2.5 rounded-xl border border-indigo-200 hover:border-indigo-500 bg-indigo-50/60 hover:bg-indigo-50 text-right transition sm:col-span-2">
+            <div class="font-bold text-indigo-900 flex items-center gap-1">
+              <i data-lucide="compass" class="w-4 h-4 text-indigo-600"></i>
+              <span>۷. بهینه‌سازی جغرافیایی هوشمند (نزدیک‌ترین ایستگاه)</span>
+            </div>
+            <div class="text-[11px] text-indigo-700 mt-0.5">مرتب‌سازی بر اساس کمترین فاصله جغرافیایی بین مختصات مرسولات</div>
+          </button>
+
+          <button onclick="reverseSelectedSubset()" class="p-2.5 rounded-xl border border-amber-200 hover:border-amber-500 bg-amber-50/60 hover:bg-amber-50 text-right transition sm:col-span-2">
+            <div class="font-bold text-amber-900 flex items-center gap-1">
+              <i data-lucide="check-square" class="w-4 h-4 text-amber-600"></i>
+              <span>۸. بهینه‌سازی بخشی (فقط مرسولات تیک‌خورده)</span>
+            </div>
+            <div class="text-[11px] text-amber-700 mt-0.5">مرتب‌سازی جغرافیایی صرفاً روی ایستگاه‌های انتخاب‌شده در لیست زیر</div>
+          </button>
+        </div>
+
+        <!-- Mode 4: Start from any selected parcel -->
+        <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 flex flex-wrap items-center justify-between gap-2 text-xs">
+          <div class="flex items-center gap-2">
+            <span class="font-bold text-slate-700">۴. شروع توزیع از مرسوله دلخواه در میانه لیست:</span>
+            <select id="route-start-parcel-select" class="bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 max-w-xs"></select>
+          </div>
+          <button onclick="applyStartFromSelectedParcel()" class="bg-slate-800 hover:bg-slate-900 text-white px-3 py-1.5 rounded-lg font-bold">
+            تنظیم به عنوان ایستگاه اول (چرخش لیست)
+          </button>
+        </div>
+      </div>
+
+      <!-- Map View Container -->
+      <div id="route-map-wrapper" class="hidden bg-white rounded-2xl p-3 border border-slate-200 shadow-sm space-y-2">
+        <div class="flex items-center justify-between text-xs text-slate-600 px-1">
+          <span>نمایش ایستگاه‌های دارای مختصات تاییدشده روی نقشه (امکان مسیریابی با نشان / بلد / گوگل‌مپ)</span>
+          <span id="map-coords-count" class="font-bold text-emerald-700"></span>
+        </div>
+        <div id="leaflet-map" class="w-full h-96 rounded-xl border border-slate-200 z-10"></div>
+      </div>
+
+      <!-- Route Stop List (Supports Manual Reordering Up/Down & Subset Selection) -->
+      <div id="route-stops-list" class="space-y-2"></div>
+    </section>
+
+    <!-- 5. BARCODE SCANNER & OCR LABEL READER TAB -->
+    <section id="tab-scanner" class="hidden space-y-4">
+      <!-- Real Camera Barcode Scanner -->
+      <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm space-y-3">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="font-bold text-slate-800 text-base">اسکنر بارکد مرسوله (دوربین زنده و جستجوی فوری)</h2>
+            <p class="text-xs text-slate-500">بارکد تیپاکس را مقابل دوربین بگیرید یا کد را وارد کنید تا پرونده مرسوله بلافاصله باز شود</p>
+          </div>
+          <button id="btn-toggle-camera" onclick="toggleCameraScanner()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3.5 py-2 rounded-xl flex items-center gap-1.5">
+            <i data-lucide="camera" class="w-4 h-4"></i>
+            <span>روشن کردن دوربین</span>
+          </button>
+        </div>
+
+        <div id="qr-reader" class="w-full rounded-xl overflow-hidden bg-slate-900 hidden"></div>
+
+        <div class="flex gap-2 pt-2">
+          <input id="manual-barcode-scan-input" type="text" dir="ltr" placeholder="TPX-4059001" class="flex-1 border border-slate-300 rounded-xl px-3 py-2 text-xs text-right" />
+          <button onclick="handleScannedBarcode(document.getElementById('manual-barcode-scan-input').value)" class="bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold px-4 py-2 rounded-xl">
+            جستجو / اسکن دستی
+          </button>
+        </div>
+      </div>
+
+      <!-- Smart Label OCR Extractor -->
+      <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm space-y-3">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h3 class="font-bold text-slate-800 text-base">استخراج هوشمند اطلاعات از برچسب مرسوله (OCR)</h3>
+            <p class="text-xs text-slate-500">عکسبرداری از لیبل پستی یا جایگذاری متن خام برچسب جهت تشخیص خودکار گیرنده، موبایل، کدپستی و آدرس</p>
+          </div>
+          <button onclick="fillSampleOcrText()" class="text-xs bg-amber-100 hover:bg-amber-200 text-amber-900 font-bold px-3 py-1.5 rounded-lg">
+            تست با نمونه لیبل تیپاکس
+          </button>
+        </div>
+
+        <textarea id="ocr-raw-input" rows="4" placeholder="متن استخراج‌شده از تصویر برچسب را اینجا قرار دهید یا دکمه «تست با نمونه لیبل تیپاکس» را بزنید..." class="w-full border border-slate-300 rounded-xl p-3 text-xs leading-relaxed"></textarea>
+
+        <div class="flex justify-end">
+          <button onclick="parseOcrLabel()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-4 py-2 rounded-xl flex items-center gap-1.5">
+            <i data-lucide="wand-2" class="w-4 h-4"></i>
+            تحلیل هوشمند لیبل و پیش‌نمایش
+          </button>
+        </div>
+
+        <!-- Editable OCR Confirmation Box -->
+        <div id="ocr-confirm-box" class="hidden bg-indigo-50/60 border border-indigo-200 rounded-xl p-3 space-y-2.5 text-xs">
+          <div class="font-bold text-indigo-950">پیش‌نمایش اطلاعات استخراج‌شده (قبل از ذخیره بررسی و در صورت نیاز اصلاح کنید):</div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <input id="ocr-name" type="text" placeholder="نام گیرنده" class="border border-slate-300 rounded-lg px-2.5 py-1.5 bg-white" />
+            <input id="ocr-phone" type="text" dir="ltr" placeholder="موبایل" class="border border-slate-300 rounded-lg px-2.5 py-1.5 bg-white text-right" />
+            <input id="ocr-barcode" type="text" dir="ltr" placeholder="بارکد" class="border border-slate-300 rounded-lg px-2.5 py-1.5 bg-white text-right" />
+            <input id="ocr-postal" type="text" dir="ltr" placeholder="کد پستی" class="border border-slate-300 rounded-lg px-2.5 py-1.5 bg-white text-right" />
+            <input id="ocr-address" type="text" placeholder="آدرس کامل" class="sm:col-span-2 border border-slate-300 rounded-lg px-2.5 py-1.5 bg-white" />
+          </div>
+          <button onclick="saveOcrConfirmedParcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 rounded-lg">
+            تایید و ذخیره در لیست مرسولات
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. SESSIONS MANAGEMENT TAB -->
+    <section id="tab-sessions" class="hidden space-y-4">
+      <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm space-y-3">
+        <h2 class="font-bold text-slate-800 text-base">مدیریت شیفت‌ها و جلسات توزیع روزانه</h2>
+        <p class="text-xs text-slate-500">تمام اطلاعات هر شیفت به صورت دائمی در حافظه دستگاه ذخیره می‌شود و با بستن برنامه یا ری‌استارت گوشی هیچ اطلاعاتی پاک نخواهد شد.</p>
+
+        <div class="flex gap-2 pt-2">
+          <input id="new-session-name" type="text" placeholder="نام شیفت جدید (مثلاً: شیفت عصر - ۱ آبان - ونک)" class="flex-1 border border-slate-300 rounded-xl px-3 py-2 text-xs" />
+          <button onclick="createNewSession()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2 rounded-xl">
+            ایجاد شیفت جدید
+          </button>
+        </div>
+
+        <div id="sessions-list-container" class="space-y-2 pt-3"></div>
+      </div>
+
+      <!-- Settings & Data Backup -->
+      <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm space-y-3">
+        <h3 class="font-bold text-slate-800 text-sm">تنظیمات امنیتی و قوانین ثبت کد تحویل</h3>
+        <label class="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-200 cursor-pointer text-xs">
+          <div>
+            <div class="font-bold text-slate-800">اجباری بودن ثبت «کد تحویل گیرنده» هنگام تحویل موفق</div>
+            <div class="text-slate-500 mt-0.5">در صورت فعال بودن، مامور توزیع بدون وارد کردن کد تحویل نمی‌تواند وضعیت را به «تحویل شد» تغییر دهد.</div>
+          </div>
+          <input id="setting-mandatory-code" type="checkbox" checked onchange="toggleMandatoryCodeSetting(this.checked)" class="w-5 h-5 accent-emerald-600" />
+        </label>
+      </div>
+    </section>
+
+    <!-- 7. EXPORT EXCEL & PRINTABLE SHEET TAB -->
+    <section id="tab-export" class="hidden space-y-4">
+      <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm space-y-4">
+        <h2 class="font-bold text-slate-800 text-base">خروجی گزارش اکسل (XLSX / CSV) و چاپ لیست مسیر</h2>
+        <p class="text-xs text-slate-500">خروجی شامل شماره ایستگاه، نام گیرنده، موبایل (با حفظ صفر اول)، بارکد، کد تحویل ثبت‌شده، وضعیت نهایی و زمان دقیق تحویل به تاریخ شمسی است.</p>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">فیلتر رکوردهای خروجی:</label>
+            <select id="export-filter-select" class="w-full border border-slate-300 rounded-xl px-3 py-2 bg-white">
+              <option value="ALL">تمام مرسولات شیفت فعلی</option>
+              <option value="DELIVERED">فقط مرسولات تحویل‌شده (به همراه کد تحویل)</option>
+              <option value="UNDELIVERED">مرسولات باقی‌مانده (تحویل‌نشده)</option>
+              <option value="FAILED">مرسولات ناموفق / نیازمند مراجعه مجدد</option>
+            </select>
+          </div>
+          <div class="flex items-end gap-2">
+            <button onclick="exportRecords('xlsx')" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-3 rounded-xl flex items-center justify-center gap-1.5 shadow-sm">
+              <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
+              دانلود فایل XLSX
+            </button>
+            <button onclick="exportRecords('csv')" class="flex-1 bg-slate-800 hover:bg-slate-900 text-white font-bold py-2.5 px-3 rounded-xl flex items-center justify-center gap-1.5 shadow-sm">
+              <i data-lucide="file-text" class="w-4 h-4"></i>
+              دانلود فایل CSV
+            </button>
+          </div>
+        </div>
+
+        <div class="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
+          <span class="text-xs text-slate-600">نسخه چاپی مخصوص مامور توزیع (شامل ستون امضا و کد تحویل دست‌نویس):</span>
+          <button onclick="prepareAndPrintSheet()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl flex items-center gap-1.5">
+            <i data-lucide="printer" class="w-4 h-4"></i>
+            چاپ برگه مسیر توزیع (PDF / پرینتر)
+          </button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- PRINTABLE ROUTE SHEET AREA -->
+  <div id="printable-area" class="hidden p-6 text-slate-900">
+    <div class="border-b-2 border-slate-800 pb-3 mb-4 flex justify-between items-center">
+      <div>
+        <h1 class="text-lg font-black">فرم روزانه مسیر توزیع مرسولات - تیپاکس‌یار</h1>
+        <p id="print-session-subtitle" class="text-xs text-slate-600 mt-1"></p>
+      </div>
+      <div id="print-date-label" class="text-xs font-bold"></div>
+    </div>
+    <table class="w-full border-collapse border border-slate-400 text-xs text-right">
+      <thead>
+        <tr class="bg-slate-100">
+          <th class="border border-slate-400 p-1.5">ایستگاه</th>
+          <th class="border border-slate-400 p-1.5">گیرنده و موبایل</th>
+          <th class="border border-slate-400 p-1.5">بارکد</th>
+          <th class="border border-slate-400 p-1.5">آدرس کامل</th>
+          <th class="border border-slate-400 p-1.5">وضعیت / کد تحویل</th>
+          <th class="border border-slate-400 p-1.5 w-28">توضیحات / امضا</th>
+        </tr>
+      </thead>
+      <tbody id="print-table-body"></tbody>
+    </table>
+  </div>
+
+  <!-- PARCEL DETAIL & DELIVERY CODE MODAL -->
+  <div id="parcel-modal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 hidden items-end sm:items-center justify-center p-0 sm:p-4 no-print">
+    <div class="bg-white w-full max-w-lg rounded-t-3xl sm:rounded-3xl max-h-[92vh] overflow-y-auto p-4 sm:p-5 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="flex items-center gap-2">
+          <span id="modal-stop-badge" class="bg-emerald-700 text-white text-xs font-black px-2.5 py-1 rounded-lg">ایستگاه ۱</span>
+          <h3 id="modal-recipient-name" class="font-bold text-base text-slate-800"></h3>
+        </div>
+        <button onclick="closeParcelModal()" class="p-1.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Info Details -->
+      <div class="space-y-2.5 text-xs bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
+        <div class="flex items-center justify-between">
+          <span class="text-slate-500">بارکد / کد رهگیری:</span>
+          <span id="modal-barcode" class="font-mono font-bold text-slate-800 bg-white px-2 py-0.5 rounded border"></span>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="text-slate-500">شماره همراه گیرنده:</span>
+          <a id="modal-phone-link" href="#" class="font-bold text-emerald-700 underline dir-ltr"></a>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="text-slate-500">کد پستی و محله:</span>
+          <span id="modal-postal-district" class="font-medium text-slate-700"></span>
+        </div>
+        <div class="pt-1 border-t border-slate-200/80">
+          <span class="text-slate-500 block mb-1">آدرس کامل تحویل:</span>
+          <p id="modal-address" class="font-bold text-slate-800 text-sm leading-relaxed"></p>
+        </div>
+        <div class="flex gap-2 pt-2">
+          <button onclick="openExternalNavigation()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded-xl flex items-center justify-center gap-1.5">
+            <i data-lucide="navigation-2" class="w-4 h-4"></i>
+            مسیریابی در نقشه (نشان / بلد / گوگل)
+          </button>
+        </div>
+      </div>
+
+      <!-- CORE FEATURE E: DELIVERY CODE INPUT -->
+      <div class="bg-amber-50/90 border-2 border-amber-400 rounded-2xl p-3.5 space-y-2">
+        <div class="flex items-center justify-between">
+          <label class="text-xs font-black text-amber-950 flex items-center gap-1.5">
+            <i data-lucide="key-round" class="w-4 h-4 text-amber-700"></i>
+            کد تحویل گیرنده (Delivery Code)
+          </label>
+          <span class="text-[11px] text-amber-800 font-medium">محفوظ در حافظه آفلاین</span>
+        </div>
+        <div class="flex gap-2">
+          <input id="modal-delivery-code" type="text" dir="ltr" placeholder="کد تحویل را وارد کنید (مثلاً 84920)" class="flex-1 bg-white border border-amber-400 rounded-xl px-3 py-2.5 text-center font-mono text-base font-black tracking-widest text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-500" />
+          <button onclick="saveDeliveryCodeOnly()" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs px-3.5 rounded-xl">
+            ذخیره کد
+          </button>
+        </div>
+      </div>
+
+      <!-- CORE FEATURE F: STATUS & NOTES -->
+      <div class="space-y-2.5 text-xs">
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">وضعیت توزیع مرسوله:</label>
+          <select id="modal-status-select" class="w-full border border-slate-300 rounded-xl px-3 py-2.5 font-bold bg-white">
+            <option value="REGISTERED">ثبت شده</option>
+            <option value="READY">آماده توزیع</option>
+            <option value="IN_DELIVERY">در حال توزیع در مسیر</option>
+            <option value="DELIVERED">تحویل موفق به گیرنده</option>
+            <option value="UNAVAILABLE">عدم حضور گیرنده در محل</option>
+            <option value="WRONG_ADDRESS">آدرس ناقص یا اشتباه</option>
+            <option value="REFUSED">خودداری گیرنده از تحویل</option>
+            <option value="POSTPONED">موکول به نوبت / روز بعد</option>
+            <option value="RETURN_REQUIRED">نیازمند مرجوعی / پیگیری شعبه</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">یادداشت مامور توزیع / توضیحات مراجعه:</label>
+          <textarea id="modal-notes" rows="2" placeholder="توضیحات تکمیلی یا علت عدم تحویل..." class="w-full border border-slate-300 rounded-xl p-2.5"></textarea>
+        </div>
+      </div>
+
+      <!-- Primary Action Buttons -->
+      <div class="grid grid-cols-2 gap-2.5 pt-2">
+        <button onclick="quickMarkDelivered()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-3 rounded-xl shadow flex items-center justify-center gap-1.5">
+          <i data-lucide="check-circle" class="w-4 h-4"></i>
+          ثبت تحویل قطعی و ایستگاه بعد
+        </button>
+        <button onclick="saveParcelChanges()" class="bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs py-3 rounded-xl flex items-center justify-center gap-1.5">
+          <i data-lucide="save" class="w-4 h-4"></i>
+          ذخیره وضعیت و تغییرات
+        </button>
+      </div>
+
+      <!-- Status Audit History -->
+      <div class="pt-2 border-t border-slate-100">
+        <div class="text-[11px] font-bold text-slate-500 mb-1.5">تاریخچه مراجعات و تغییرات وضعیت این مرسوله:</div>
+        <div id="modal-history-list" class="space-y-1 max-h-28 overflow-y-auto text-[11px] text-slate-600"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTTOM NAVIGATION BAR -->
+  <nav class="fixed bottom-0 inset-x-0 bg-white border-t border-slate-200 z-30 no-print">
+    <div class="max-w-4xl mx-auto grid grid-cols-5 text-[11px]">
+      <button onclick="switchTab('dashboard')" data-tab="dashboard" class="nav-btn py-2.5 flex flex-col items-center justify-center gap-1 text-emerald-700 font-bold">
+        <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+        <span>داشبورد</span>
+      </button>
+      <button onclick="switchTab('import')" data-tab="import" class="nav-btn py-2.5 flex flex-col items-center justify-center gap-1 text-slate-500">
+        <i data-lucide="file-up" class="w-5 h-5"></i>
+        <span>ورود اکسل</span>
+      </button>
+      <button onclick="switchTab('parcels')" data-tab="parcels" class="nav-btn py-2.5 flex flex-col items-center justify-center gap-1 text-slate-500">
+        <i data-lucide="package-search" class="w-5 h-5"></i>
+        <span>مرسولات</span>
+      </button>
+      <button onclick="switchTab('route')" data-tab="route" class="nav-btn py-2.5 flex flex-col items-center justify-center gap-1 text-slate-500">
+        <i data-lucide="map-pinned" class="w-5 h-5"></i>
+        <span>مسیریابی</span>
+      </button>
+      <button onclick="switchTab('export')" data-tab="export" class="nav-btn py-2.5 flex flex-col items-center justify-center gap-1 text-slate-500">
+        <i data-lucide="file-check-2" class="w-5 h-5"></i>
+        <span>گزارش و چاپ</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- TOAST NOTIFICATION -->
+  <div id="toast-box" class="fixed top-16 left-1/2 -translate-x-1/2 z-50 hidden bg-slate-900 text-white text-xs font-bold px-4 py-2.5 rounded-full shadow-lg items-center gap-2">
+    <span id="toast-text"></span>
+  </div>
+
+  <script>
+    /**************************************************************
+     * 1. PERSIAN / ARABIC NORMALIZATION & JALALI DATE UTILITIES
+     **************************************************************/
+    const PERSIAN_DIGITS = ['۰','۱','۲','۳','۴','۵','۶','۷','۸','۹'];
+    const ARABIC_DIGITS  = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'];
+
+    function toEnglishDigits(str) {
+      if (str === null || str === undefined) return '';
+      let res = String(str);
+      for (let i = 0; i < 10; i++) {
+        res = res.replace(new RegExp(PERSIAN_DIGITS[i], 'g'), i)
+                 .replace(new RegExp(ARABIC_DIGITS[i], 'g'), i);
+      }
+      return res;
+    }
+
+    function toPersianDigits(str) {
+      if (str === null || str === undefined) return '';
+      return String(str).replace(/\d/g, d => PERSIAN_DIGITS[Number(d)]);
+    }
+
+    function normalizePersianText(str) {
+      if (!str) return '';
+      return toEnglishDigits(str)
+        .replace(/ي/g, 'ی')
+        .replace(/ك/g, 'ک')
+        .replace(/ة/g, 'ه')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+
+    function normalizePhone(phoneRaw) {
+      let clean = toEnglishDigits(phoneRaw).replace(/[^0-9]/g, '');
+      if (clean.startsWith('989') && clean.length === 12) {
+        clean = '0' + clean.slice(2);
+      } else if (clean.length === 10 && clean.startsWith('9')) {
+        clean = '0' + clean;
+      }
+      return clean;
+    }
+
+    function getJalaliNowString() {
+      try {
+        return new Intl.DateTimeFormat('fa-IR', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit'
+        }).format(new Date());
+      } catch (e) {
+        return new Date().toLocaleString('fa-IR');
+      }
+    }
+
+    /**************************************************************
+     * 2. PERSISTENT LOCAL STORAGE STATE & STATUS DEFINITIONS
+     **************************************************************/
+    const STORAGE_KEY = 'TIPAXYAR_DB_V1';
+
+    const STATUS_META = {
+      REGISTERED:      { label: 'ثبت شده', color: 'bg-slate-100 text-slate-700', group: 'REMAINING' },
+      READY:           { label: 'آماده توزیع', color: 'bg-blue-100 text-blue-800', group: 'REMAINING' },
+      IN_DELIVERY:     { label: 'در حال توزیع', color: 'bg-indigo-100 text-indigo-800', group: 'REMAINING' },
+      DELIVERED:       { label: 'تحویل موفق', color: 'bg-emerald-100 text-emerald-800', group: 'DELIVERED' },
+      UNAVAILABLE:     { label: 'عدم حضور گیرنده', color: 'bg-rose-100 text-rose-800', group: 'FAILED' },
+      WRONG_ADDRESS:   { label: 'نقص/اشتباه آدرس', color: 'bg-amber-100 text-amber-900', group: 'FAILED' },
+      REFUSED:         { label: 'امتناع گیرنده', color: 'bg-rose-100 text-rose-800', group: 'FAILED' },
+      POSTPONED:       { label: 'موکول به بعد', color: 'bg-amber-100 text-amber-800', group: 'FAILED' },
+      RETURN_REQUIRED: { label: 'نیازمند مرجوعی', color: 'bg-rose-200 text-rose-950', group: 'FAILED' }
+    };
+
+    let appState = {
+      activeSessionId: 'session-default',
+      mandatoryDeliveryCode: true,
+      sessions: [
+        {
+          id: 'session-default',
+          name: 'شیفت صبح - منطقه ۲ تهران',
+          createdAt: getJalaliNowString(),
+          closed: false
+        }
+      ],
+      parcels: []
+    };
+
+    let currentStatusFilter = 'ALL';
+    let activeModalParcelId = null;
+    let selectedSubsetIds = new Set();
+    let pendingImportRows = [];
+    let pendingImportHeaders = [];
+    let leafletMap = null;
+    let html5QrScanner = null;
+
+    function loadDatabase() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        try {
+          const parsed = JSON.parse(raw);
+          if (parsed && Array.isArray(parsed.parcels)) {
+            appState = parsed;
+          }
+        } catch (e) {
+          console.error('خطا در بازیابی دیتابیس محلی:', e);
+        }
+      }
+      document.getElementById('setting-mandatory-code').checked = !!appState.mandatoryDeliveryCode;
+    }
+
+    function saveDatabase() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+      refreshAllViews();
+    }
+
+    function getActiveSessionParcels() {
+      return appState.parcels
+        .filter(p => p.sessionId === appState.activeSessionId)
+        .sort((a, b) => a.stopOrder - b.stopOrder);
+    }
+
+    /**************************************************************
+     * 3. SAMPLE FICTIONAL TEHRAN PARCEL DATA FOR INSTANT TESTING
+     **************************************************************/
+    function getSampleParcels(sessionId) {
+      const now = getJalaliNowString();
+      return [
+        {
+          id: 'p-101',
+          sessionId,
+          importIndex: 1,
+          stopOrder: 1,
+          recipientName: 'محمدرضا رضایی',
+          phone: '09121112233',
+          barcode: 'TPX-4059001',
+          postalCode: '1465789111',
+          district: 'سعادت‌آباد',
+          address: 'تهران، سعادت‌آباد، میدان کاج، خیابان سرو شرقی، پلاک ۲۴، واحد ۳',
+          lat: 35.7819,
+          lng: 51.3748,
+          needsAddressReview: false,
+          deliveryCode: '7419',
+          status: 'DELIVERED',
+          notes: 'تحویل نگهبانی ساختمان با هماهنگی گیرنده',
+          visitTimestamp: now,
+          deliveryTimestamp: now,
+          history: [{ status: 'DELIVERED', time: now, note: 'ثبت کد تحویل 7419' }]
+        },
+        {
+          id: 'p-102',
+          sessionId,
+          importIndex: 2,
+          stopOrder: 2,
+          recipientName: 'سارا احمدی‌پور',
+          phone: '09123334455',
+          barcode: 'TPX-4059002',
+          postalCode: '1465789222',
+          district: 'سعادت‌آباد',
+          address: 'تهران، سعادت‌آباد، بلوار بهزاد، کوچه گلستان دوم، پلاک ۱۲، طبقه ۴',
+          lat: 35.7845,
+          lng: 51.3792,
+          needsAddressReview: false,
+          deliveryCode: '',
+          status: 'IN_DELIVERY',
+          notes: 'پس‌کرایه ۹۵,۰۰۰ تومان',
+          visitTimestamp: '',
+          deliveryTimestamp: '',
+          history: [{ status: 'IN_DELIVERY', time: now, note: 'آماده حرکت به سمت مقصد' }]
+        },
+        {
+          id: 'p-103',
+          sessionId,
+          importIndex: 3,
+          stopOrder: 3,
+          recipientName: 'شرکت داده‌پردازی البرز (مهندس کریمی)',
+          phone: '09124445566',
+          barcode: 'TPX-4059003',
+          postalCode: '1461183451',
+          district: 'شهرک غرب',
+          address: 'تهران، شهرک غرب، بلوار فرحزادی، خیابان سیمای ایران، پلاک ۵۸، طبقه ۲',
+          lat: 35.7634,
+          lng: 51.3682,
+          needsAddressReview: false,
+          deliveryCode: '',
+          status: 'READY',
+          notes: 'بسته حساس شکستنی - تحویل تا ساعت ۱۵',
+          visitTimestamp: '',
+          deliveryTimestamp: '',
+          history: [{ status: 'READY', time: now, note: 'ورود از فایل اکسل' }]
+        },
+        {
+          id: 'p-104',
+          sessionId,
+          importIndex: 4,
+          stopOrder: 4,
+          recipientName: 'امیرحسین شریفی',
+          phone: '09356667788',
+          barcode: 'TPX-4059004',
+          postalCode: '1469912345',
+          district: 'پونک',
+          address: 'تهران، میدان پونک، بلوار میرزابابایی، خیابان سردار جنگل، کوچه بهار، پلاک ۹',
+          lat: 35.7611,
+          lng: 51.3318,
+          needsAddressReview: false,
+          deliveryCode: '',
+          status: 'UNAVAILABLE',
+          notes: 'دو بار زنگ زده شد، پاسخگو نبودند',
+          visitTimestamp: now,
+          deliveryTimestamp: '',
+          history: [{ status: 'UNAVAILABLE', time: now, note: 'عدم حضور گیرنده در مراجعه اول' }]
+        },
+        {
+          id: 'p-105',
+          sessionId,
+          importIndex: 5,
+          stopOrder: 5,
+          recipientName: 'الهام کاظمی',
+          phone: '09198889900',
+          barcode: 'TPX-4059005',
+          postalCode: '1458844321',
+          district: 'مرزداران',
+          address: 'تهران، بلوار مرزداران، نرسیده به اشرفی اصفهانی، کوچه گلها (بدون پلاک)',
+          lat: null,
+          lng: null,
+          needsAddressReview: true,
+          deliveryCode: '',
+          status: 'WRONG_ADDRESS',
+          notes: 'پلاک در لیبل درج نشده، نیاز به تماس تلفنی',
+          visitTimestamp: now,
+          deliveryTimestamp: '',
+          history: [{ status: 'WRONG_ADDRESS', time: now, note: 'نقص پلاک در آدرس' }]
+        },
+        {
+          id: 'p-106',
+          sessionId,
+          importIndex: 6,
+          stopOrder: 6,
+          recipientName: 'دکتر فرهاد نادری',
+          phone: '09127778899',
+          barcode: 'TPX-4059006',
+          postalCode: '1435678901',
+          district: 'گیشا',
+          address: 'تهران، کوی نصر (گیشا)، خیابان پیروزی غربی، خیابان پانزدهم، پلاک ۳۱، مطب طبقه اول',
+          lat: 35.7362,
+          lng: 51.3765,
+          needsAddressReview: false,
+          deliveryCode: '',
+          status: 'READY',
+          notes: 'تحویل منشی مطب',
+          visitTimestamp: '',
+          deliveryTimestamp: '',
+          history: [{ status: 'READY', time: now, note: 'ورود از فایل اکسل' }]
+        }
+      ];
+    }
+
+    function loadSampleDataWithToast() {
+      // Remove existing sample ids in current session to avoid clash
+      appState.parcels = appState.parcels.filter(p => p.sessionId !== appState.activeSessionId);
+      const samples = getSampleParcels(appState.activeSessionId);
+      appState.parcels.push(...samples);
+      saveDatabase();
+      showToast('۶ مرسوله آزمایشی با موفقیت در شیفت فعلی بارگذاری شد');
+    }
+
+    /**************************************************************
+     * 4. UI REFRESH & DASHBOARD LIVE METRICS
+     **************************************************************/
+    function refreshAllViews() {
+      document.getElementById('current-jalali-date').textContent = getJalaliNowString();
+      const activeSession = appState.sessions.find(s => s.id === appState.activeSessionId) || appState.sessions[0];
+      if (activeSession) {
+        document.getElementById('active-session-badge').textContent = activeSession.name;
+        document.getElementById('dash-session-title').textContent = activeSession.name;
+      }
+
+      const parcels = getActiveSessionParcels();
+      const total = parcels.length;
+      const delivered = parcels.filter(p => p.status === 'DELIVERED').length;
+      const failed = parcels.filter(p => STATUS_META[p.status]?.group === 'FAILED').length;
+      const remaining = parcels.filter(p => STATUS_META[p.status]?.group === 'REMAINING').length;
+      const reviewCount = parcels.filter(p => p.needsAddressReview || p.status === 'WRONG_ADDRESS').length;
+      const pct = total > 0 ? Math.round((delivered / total) * 100) : 0;
+
+      document.getElementById('stat-total').textContent = toPersianDigits(total);
+      document.getElementById('stat-delivered').textContent = toPersianDigits(delivered);
+      document.getElementById('stat-remaining').textContent = toPersianDigits(remaining);
+      document.getElementById('stat-failed').textContent = toPersianDigits(failed);
+      document.getElementById('stat-review').textContent = toPersianDigits(reviewCount);
+      document.getElementById('dash-progress-text').textContent = toPersianDigits(pct) + '٪';
+      document.getElementById('dash-progress-bar').style.width = pct + '%';
+
+      const nextParcel = parcels.find(p => STATUS_META[p.status]?.group === 'REMAINING');
+      if (nextParcel) {
+        document.getElementById('stat-current-stop').textContent = 'ایستگاه ' + toPersianDigits(nextParcel.stopOrder);
+        document.getElementById('dash-next-stop-banner').innerHTML = `
+          <i data-lucide="navigation" class="w-4 h-4 text-amber-300"></i>
+          <span>ایستگاه بعدی (${toPersianDigits(nextParcel.stopOrder)}): ${nextParcel.recipientName} - ${nextParcel.district || 'بدون محله'}</span>
+        `;
+      } else {
+        document.getElementById('stat-current-stop').textContent = total > 0 ? 'تکمیل' : '—';
+        document.getElementById('dash-next-stop-banner').innerHTML = `<span>ایستگاه فعالی در صف توزیع نیست</span>`;
+      }
+
+      const emptyBox = document.getElementById('dash-empty-state');
+      if (total === 0) emptyBox.classList.remove('hidden');
+      else emptyBox.classList.add('hidden');
+
+      renderParcelList();
+      renderRouteList();
+      renderSessionsList();
+      lucide.createIcons();
+    }
+
+    function switchTab(tabName) {
+      const sections = ['dashboard', 'import', 'parcels', 'route', 'scanner', 'sessions', 'export'];
+      sections.forEach(s => {
+        const el = document.getElementById('tab-' + s);
+        if (el) el.classList.toggle('hidden', s !== tabName);
+      });
+
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        const isMatch = btn.getAttribute('data-tab') === tabName;
+        btn.className = `nav-btn py-2.5 flex flex-col items-center justify-center gap-1 ${isMatch ? 'text-emerald-700 font-bold' : 'text-slate-500'}`;
+      });
+
+      if (tabName === 'route' && !document.getElementById('route-map-wrapper').classList.contains('hidden')) {
+        setTimeout(renderLeafletMap, 150);
+      }
+      lucide.createIcons();
+    }
+
+    function filterParcelsAndGo(filterType) {
+      setStatusFilter(filterType);
+      switchTab('parcels');
+    }
+
+    function setStatusFilter(filterType) {
+      currentStatusFilter = filterType;
+      document.querySelectorAll('.filter-chip').forEach(chip => {
+        const active = chip.getAttribute('data-filter') === filterType;
+        chip.className = `filter-chip px-3 py-1.5 rounded-full whitespace-nowrap ${active ? 'font-bold bg-emerald-700 text-white' : 'font-medium bg-slate-100 text-slate-700'}`;
+      });
+      renderParcelList();
+    }
+
+    /**************************************************************
+     * 5. PARCEL LIST & SEARCH IMPLEMENTATION
+     **************************************************************/
+    function renderParcelList() {
+      const container = document.getElementById('parcels-list-container');
+      if (!container) return;
+
+      const rawQuery = normalizePersianText(document.getElementById('parcel-search-input')?.value || '').toLowerCase();
+      let list = getActiveSessionParcels();
+
+      if (currentStatusFilter !== 'ALL') {
+        list = list.filter(p => {
+          if (currentStatusFilter === 'NEEDS_REVIEW') return p.needsAddressReview || p.status === 'WRONG_ADDRESS';
+          return STATUS_META[p.status]?.group === currentStatusFilter;
+        });
+      }
+
+      if (rawQuery) {
+        list = list.filter(p => {
+          const hay = normalizePersianText(`${p.recipientName} ${p.phone} ${p.barcode} ${p.address} ${p.postalCode} ${p.district}`).toLowerCase();
+          return hay.includes(rawQuery);
+        });
+      }
+
+      if (list.length === 0) {
+        container.innerHTML = `
+          <div class="bg-white rounded-2xl p-6 text-center border border-slate-200 text-xs text-slate-500">
+            مرسوله‌ای مطابق با فیلتر یا عبارت جستجو یافت نشد.
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = list.map(p => {
+        const st = STATUS_META[p.status] || STATUS_META.REGISTERED;
+        return `
+          <div onclick="openParcelModal('${p.id}')" class="bg-white rounded-2xl p-3.5 border border-slate-200 shadow-xs hover:border-emerald-500 cursor-pointer transition space-y-2">
+            <div class="flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2">
+                <span class="w-7 h-7 rounded-lg bg-slate-900 text-white text-xs font-black flex items-center justify-center">
+                  ${toPersianDigits(p.stopOrder)}
+                </span>
+                <div>
+                  <div class="font-bold text-slate-800 text-sm">${p.recipientName}</div>
+                  <div class="text-[11px] text-slate-500 font-mono">${p.barcode} • ${toPersianDigits(p.phone)}</div>
+                </div>
+              </div>
+              <span class="text-[11px] font-bold px-2.5 py-1 rounded-full ${st.color}">${st.label}</span>
+            </div>
+
+            <p class="text-xs text-slate-600 line-clamp-2 leading-relaxed">${p.address}</p>
+
+            <div class="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-100 text-[11px]">
+              <div class="flex items-center gap-2 text-slate-500">
+                <span>محله: <strong class="text-slate-700">${p.district || 'نامشخص'}</strong></span>
+                ${p.needsAddressReview ? '<span class="bg-amber-100 text-amber-900 px-2 py-0.5 rounded font-bold">نیازمند بررسی آدرس</span>' : ''}
+              </div>
+              <div>
+                ${p.deliveryCode
+                  ? `<span class="bg-emerald-50 text-emerald-800 border border-emerald-300 px-2 py-0.5 rounded font-mono font-bold">کد تحویل: ${p.deliveryCode}</span>`
+                  : `<span class="text-slate-400">بدون کد تحویل</span>`}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    /**************************************************************
+     * 6. PARCEL DETAIL MODAL & DELIVERY CODE WORKFLOW
+     **************************************************************/
+    function openParcelModal(parcelId) {
+      const p = appState.parcels.find(x => x.id === parcelId);
+      if (!p) return;
+      activeModalParcelId = parcelId;
+
+      document.getElementById('modal-stop-badge').textContent = 'ایستگاه ' + toPersianDigits(p.stopOrder);
+      document.getElementById('modal-recipient-name').textContent = p.recipientName;
+      document.getElementById('modal-barcode').textContent = p.barcode;
+      const phoneLink = document.getElementById('modal-phone-link');
+      phoneLink.textContent = toPersianDigits(p.phone);
+      phoneLink.href = 'tel:' + p.phone;
+
+      document.getElementById('modal-postal-district').textContent = `${p.district || '—'} | کدپستی: ${toPersianDigits(p.postalCode || 'ثبت نشده')}`;
+      document.getElementById('modal-address').textContent = p.address;
+      document.getElementById('modal-delivery-code').value = p.deliveryCode || '';
+      document.getElementById('modal-status-select').value = p.status || 'READY';
+      document.getElementById('modal-notes').value = p.notes || '';
+
+      const historyContainer = document.getElementById('modal-history-list');
+      const hist = p.history || [];
+      historyContainer.innerHTML = hist.length === 0
+        ? '<div>سابقه‌ای ثبت نشده است.</div>'
+        : hist.map(h => `
+            <div class="flex justify-between bg-slate-50 px-2 py-1 rounded">
+              <span><strong>${STATUS_META[h.status]?.label || h.status}</strong> - ${h.note || ''}</span>
+              <span class="text-slate-400">${h.time}</span>
+            </div>
+          `).join('');
+
+      const modal = document.getElementById('parcel-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      lucide.createIcons();
+    }
+
+    function closeParcelModal() {
+      const modal = document.getElementById('parcel-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      activeModalParcelId = null;
+    }
+
+    function saveDeliveryCodeOnly() {
+      const p = appState.parcels.find(x => x.id === activeModalParcelId);
+      if (!p) return;
+      const code = toEnglishDigits(document.getElementById('modal-delivery-code').value).trim();
+      p.deliveryCode = code;
+      p.history = p.history || [];
+      p.history.unshift({ status: p.status, time: getJalaliNowString(), note: `ذخیره کد تحویل: ${code || 'خالی'}` });
+      saveDatabase();
+      showToast('کد تحویل برای این مرسوله ذخیره شد');
+    }
+
+    function quickMarkDelivered() {
+      const p = appState.parcels.find(x => x.id === activeModalParcelId);
+      if (!p) return;
+      const code = toEnglishDigits(document.getElementById('modal-delivery-code').value).trim();
+
+      if (appState.mandatoryDeliveryCode && !code) {
+        alert('خطا: طبق تنظیمات فعلی، وارد کردن «کد تحویل گیرنده» برای ثبت تحویل موفق الزامی است.');
+        document.getElementById('modal-delivery-code').focus();
+        return;
+      }
+
+      if (!confirm(`آیا از ثبت تحویل نهایی مرسوله «${p.recipientName}» با کد تحویل «${code || 'بدون کد'}» اطمینان دارید؟`)) {
+        return;
+      }
+
+      const now = getJalaliNowString();
+      p.deliveryCode = code;
+      p.status = 'DELIVERED';
+      p.notes = normalizePersianText(document.getElementById('modal-notes').value);
+      p.visitTimestamp = now;
+      p.deliveryTimestamp = now;
+      p.history = p.history || [];
+      p.history.unshift({ status: 'DELIVERED', time: now, note: `تحویل قطعی (کد: ${code || '—'})` });
+
+      saveDatabase();
+      closeParcelModal();
+      showToast('مرسوله با موفقیت تحویل شد');
+    }
+
+    function saveParcelChanges() {
+      const p = appState.parcels.find(x => x.id === activeModalParcelId);
+      if (!p) return;
+      const newStatus = document.getElementById('modal-status-select').value;
+      const code = toEnglishDigits(document.getElementById('modal-delivery-code').value).trim();
+
+      if (newStatus === 'DELIVERED' && appState.mandatoryDeliveryCode && !code) {
+        alert('برای تغییر وضعیت به «تحویل موفق»، وارد کردن کد تحویل گیرنده الزامی است.');
+        return;
+      }
+
+      const now = getJalaliNowString();
+      p.deliveryCode = code;
+      p.status = newStatus;
+      p.notes = normalizePersianText(document.getElementById('modal-notes').value);
+      p.visitTimestamp = now;
+      if (newStatus === 'DELIVERED') p.deliveryTimestamp = now;
+
+      p.history = p.history || [];
+      p.history.unshift({ status: newStatus, time: now, note: p.notes || 'بروزرسانی وضعیت' });
+
+      saveDatabase();
+      closeParcelModal();
+      showToast('وضعیت و اطلاعات مرسوله بروزرسانی شد');
+    }
+
+    function openNextEligibleParcel() {
+      const parcels = getActiveSessionParcels();
+      const next = parcels.find(p => STATUS_META[p.status]?.group === 'REMAINING');
+      if (!next) {
+        showToast('تمام مرسولات این شیفت تعیین تکلیف شده‌اند');
+        return;
+      }
+      openParcelModal(next.id);
+    }
+
+    function openExternalNavigation() {
+      const p = appState.parcels.find(x => x.id === activeModalParcelId);
+      if (!p) return;
+      if (p.lat && p.lng) {
+        window.open(`https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}`, '_blank');
+      } else {
+        const q = encodeURIComponent(p.address);
+        window.open(`https://www.google.com/maps/search/?api=1&query=${q}`, '_blank');
+      }
+    }
+
+    /**************************************************************
+     * 7. BULK EXCEL / CSV IMPORT & COLUMN MAPPING
+     **************************************************************/
+    function handleFileSelect(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array', raw: false });
+          const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+          const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1, raw: false, defval: '' });
+
+          if (!rows || rows.length < 2) {
+            alert('فایل انتخاب‌شده خالی است یا ساختار جدول معتبری ندارد.');
+            return;
+          }
+
+          pendingImportHeaders = rows[0].map((h, idx) => normalizePersianText(h) || `ستون ${idx + 1}`);
+          pendingImportRows = rows.slice(1).filter(r => r.some(cell => String(cell).trim() !== ''));
+
+          buildColumnMappingUI();
+        } catch (err) {
+          alert('خطا در خواندن فایل اکسل: ' + err.message);
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    const TARGET_FIELDS = [
+      { key: 'recipientName', label: 'نام گیرنده *', keywords: ['نام', 'گیرنده', 'مشتری', 'name', 'recipient'] },
+      { key: 'phone',         label: 'شماره موبایل *', keywords: ['موبایل', 'تلفن', 'همراه', 'شماره', 'phone', 'mobile'] },
+      { key: 'address',       label: 'آدرس کامل *', keywords: ['آدرس', 'ادرس', 'نشانی', 'محل', 'address'] },
+      { key: 'barcode',       label: 'بارکد / رهگیری *', keywords: ['بارکد', 'رهگیری', 'کد مرسوله', 'قرارداد', 'barcode', 'tracking'] },
+      { key: 'postalCode',    label: 'کد پستی', keywords: ['پستی', 'کدپستی', 'postal'] },
+      { key: 'district',      label: 'محله / منطقه', keywords: ['محله', 'منطقه', 'ناحیه', 'district'] },
+      { key: 'notes',         label: 'یادداشت / توضیحات', keywords: ['توضیح', 'یادداشت', 'پلاک', 'note'] }
+    ];
+
+    function buildColumnMappingUI() {
+      const mappingDiv = document.getElementById('column-mapping-section');
+      const controlsDiv = document.getElementById('column-mapping-controls');
+      document.getElementById('import-mapping-section').classList.remove('hidden');
+
+      controlsDiv.innerHTML = TARGET_FIELDS.map(tf => {
+        // Auto-detect best matching column
+        let matchedIdx = -1;
+        pendingImportHeaders.forEach((h, i) => {
+          const low = h.toLowerCase();
+          if (tf.keywords.some(k => low.includes(k))) matchedIdx = i;
+        });
+
+        const options = `<option value="-1">-- عدم انتخاب --</option>` +
+          pendingImportHeaders.map((h, i) => `<option value="${i}" ${i === matchedIdx ? 'selected' : ''}>${h}</option>`).join('');
+
+        return `
+          <div class="bg-slate-50 p-2 rounded-xl border border-slate-200 text-xs">
+            <label class="block font-bold text-slate-700 mb-1">${tf.label}</label>
+            <select id="map-col-${tf.key}" onchange="renderImportPreviewTable()" class="w-full bg-white border border-slate-300 rounded-lg px-2 py-1.5">
+              ${options}
+            </select>
+          </div>
+        `;
+      }).join('');
+
+      renderImportPreviewTable();
+    }
+
+    function getMappedColIndex(key) {
+      const el = document.getElementById('map-col-' + key);
+      return el ? parseInt(el.value, 10) : -1;
+    }
+
+    function renderImportPreviewTable() {
+      const tbody = document.getElementById('import-preview-tbody');
+      const idxName = getMappedColIndex('recipientName');
+      const idxPhone = getMappedColIndex('phone');
+      const idxAddress = getMappedColIndex('address');
+      const idxBarcode = getMappedColIndex('barcode');
+
+      let validCount = 0;
+      let warningCount = 0;
+
+      tbody.innerHTML = pendingImportRows.slice(0, 30).map((row, rIdx) => {
+        const name = idxName >= 0 ? normalizePersianText(row[idxName]) : '';
+        const phone = idxPhone >= 0 ? normalizePhone(row[idxPhone]) : '';
+        const barcode = idxBarcode >= 0 ? normalizePersianText(row[idxBarcode]) : `TPX-${Date.now()}-${rIdx}`;
+        const address = idxAddress >= 0 ? normalizePersianText(row[idxAddress]) : '';
+
+        const issues = [];
+        if (!name) issues.push('نقص نام');
+        if (!/^09\d{9}$/.test(phone)) issues.push('موبایل نامعتبر');
+        if (address.length < 8) issues.push('آدرس ناقص');
+
+        if (issues.length === 0) validCount++;
+        else warningCount++;
+
+        return `
+          <tr class="${issues.length ? 'bg-amber-50/70' : 'bg-white'}">
+            <td class="p-2">${toPersianDigits(rIdx + 1)}</td>
+            <td class="p-2 font-bold">${name || '—'}</td>
+            <td class="p-2 font-mono dir-ltr text-right">${phone || '—'}</td>
+            <td class="p-2 font-mono">${barcode}</td>
+            <td class="p-2 max-w-xs truncate">${address || '—'}</td>
+            <td class="p-2">
+              ${issues.length === 0
+                ? '<span class="text-emerald-700 font-bold">معتبر</span>'
+                : `<span class="text-amber-800 font-bold">${issues.join('، ')}</span>`}
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      document.getElementById('import-preview-summary').textContent =
+        `کل ردیف‌ها: ${toPersianDigits(pendingImportRows.length)} | آماده ثبت: ${toPersianDigits(validCount)} | دارای هشدار: ${toPersianDigits(warningCount)}`;
+    }
+
+    function confirmAndCommitImport() {
+      const idxName = getMappedColIndex('recipientName');
+      const idxPhone = getMappedColIndex('phone');
+      const idxAddress = getMappedColIndex('address');
+      const idxBarcode = getMappedColIndex('barcode');
+      const idxPostal = getMappedColIndex('postalCode');
+      const idxDistrict = getMappedColIndex('district');
+      const idxNotes = getMappedColIndex('notes');
+      const policy = document.getElementById('import-dup-policy').value;
+
+      let currentParcels = getActiveSessionParcels();
+      let maxOrder = currentParcels.reduce((m, p) => Math.max(m, p.stopOrder), 0);
+      let imported = 0;
+      let skipped = 0;
+      const now = getJalaliNowString();
+
+      pendingImportRows.forEach((row, i) => {
+        const name = idxName >= 0 ? normalizePersianText(row[idxName]) : '';
+        const phone = idxPhone >= 0 ? normalizePhone(row[idxPhone]) : '';
+        const address = idxAddress >= 0 ? normalizePersianText(row[idxAddress]) : '';
+        const barcode = idxBarcode >= 0 && normalizePersianText(row[idxBarcode])
+          ? normalizePersianText(row[idxBarcode])
+          : `TPX-${1000 + i}`;
+        const postal = idxPostal >= 0 ? toEnglishDigits(row[idxPostal]).replace(/[^0-9]/g, '') : '';
+        const district = idxDistrict >= 0 ? normalizePersianText(row[idxDistrict]) : guessDistrictFromAddress(address);
+        const notes = idxNotes >= 0 ? normalizePersianText(row[idxNotes]) : '';
+
+        if (!name && !address) return;
+
+        const existing = appState.parcels.find(p => p.sessionId === appState.activeSessionId && p.barcode === barcode);
+        if (existing) {
+          if (policy === 'SKIP') {
+            skipped++;
+            return;
+          } else if (policy === 'UPDATE') {
+            existing.recipientName = name || existing.recipientName;
+            existing.phone = phone || existing.phone;
+            existing.address = address || existing.address;
+            existing.postalCode = postal || existing.postalCode;
+            existing.district = district || existing.district;
+            existing.notes = notes || existing.notes;
+            imported++;
+            return;
+          }
+        }
+
+        maxOrder++;
+        appState.parcels.push({
+          id: 'p-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7),
+          sessionId: appState.activeSessionId,
+          importIndex: maxOrder,
+          stopOrder: maxOrder,
+          recipientName: name || 'گیرنده بدون نام',
+          phone,
+          barcode,
+          postalCode: postal,
+          district,
+          address: address || 'آدرس ثبت نشده',
+          lat: null,
+          lng: null,
+          needsAddressReview: address.length < 10,
+          deliveryCode: '',
+          status: 'READY',
+          notes,
+          visitTimestamp: '',
+          deliveryTimestamp: '',
+          history: [{ status: 'READY', time: now, note: 'وارد شده از فایل اکسل' }]
+        });
+        imported++;
+      });
+
+      saveDatabase();
+      document.getElementById('import-mapping-section').classList.add('hidden');
+      showToast(`${toPersianDigits(imported)} مرسوله وارد شد (${toPersianDigits(skipped)} تکراری رد شد)`);
+      switchTab('parcels');
+    }
+
+    function guessDistrictFromAddress(addr) {
+      const known = ['سعادت‌آباد', 'سعادت اباد', 'شهرک غرب', 'پونک', 'مرزداران', 'گیشا', 'ونک', 'جردن', 'صادقیه', 'تهرانپارس', 'نارمک'];
+      for (const k of known) {
+        if (addr.includes(k)) return k;
+      }
+      return '';
+    }
+
+    function downloadSampleTemplate() {
+      const sampleRows = [
+        ['نام گیرنده', 'شماره موبایل', 'بارکد مرسوله', 'کد پستی', 'محله', 'آدرس کامل', 'توضیحات'],
+        ['رضا کاظمی', '09121234567', 'TPX-88001', '1465789111', 'سعادت‌آباد', 'تهران، سعادت‌آباد، خیابان سرو غربی، پلاک ۱۰، واحد ۲', 'تحویل تا ظهر'],
+        ['مریم حسینی', '09359876543', 'TPX-88002', '1461183451', 'شهرک غرب', 'تهران، شهرک غرب، بلوار دادمان، کوچه بهار، پلاک ۵', 'پس‌کرایه']
+      ];
+      const ws = XLSX.utils.aoa_to_sheet(sampleRows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'لیست_توزیع_تیپاکس');
+      XLSX.writeFile(wb, 'TipaxYar_Sample_Template.xlsx');
+    }
+
+    function addManualParcel() {
+      const name = normalizePersianText(document.getElementById('man-name').value);
+      const phone = normalizePhone(document.getElementById('man-phone').value);
+      const barcode = normalizePersianText(document.getElementById('man-barcode').value) || ('TPX-' + Math.floor(100000 + Math.random() * 900000));
+      const postal = toEnglishDigits(document.getElementById('man-postal').value).trim();
+      const district = normalizePersianText(document.getElementById('man-district').value);
+      const notes = normalizePersianText(document.getElementById('man-notes').value);
+      const address = normalizePersianText(document.getElementById('man-address').value);
+
+      if (!name || !phone || !address) {
+        alert('لطفاً نام گیرنده، شماره موبایل و آدرس کامل را وارد کنید.');
+        return;
+      }
+
+      const current = getActiveSessionParcels();
+      const nextOrder = current.length + 1;
+      const now = getJalaliNowString();
+
+      appState.parcels.push({
+        id: 'p-' + Date.now(),
+        sessionId: appState.activeSessionId,
+        importIndex: nextOrder,
+        stopOrder: nextOrder,
+        recipientName: name,
+        phone,
+        barcode,
+        postalCode: postal,
+        district: district || guessDistrictFromAddress(address),
+        address,
+        lat: null,
+        lng: null,
+        needsAddressReview: address.length < 10,
+        deliveryCode: '',
+        status: 'READY',
+        notes,
+        visitTimestamp: '',
+        deliveryTimestamp: '',
+        history: [{ status: 'READY', time: now, note: 'ثبت دستی توسط مامور توزیع' }]
+      });
+
+      ['man-name','man-phone','man-barcode','man-postal','man-district','man-notes','man-address'].forEach(id => {
+        document.getElementById(id).value = '';
+      });
+
+      saveDatabase();
+      showToast('مرسوله جدید به انتهای مسیر اضافه شد');
+    }
+
+    /**************************************************************
+     * 8. FLEXIBLE ROUTE ORDERING (ALL 8 MODES) & LEAFLET MAP
+     **************************************************************/
+    function renderRouteList() {
+      const parcels = getActiveSessionParcels();
+      const selectEl = document.getElementById('route-start-parcel-select');
+      if (selectEl) {
+        selectEl.innerHTML = parcels.map(p =>
+          `<option value="${p.id}">ایستگاه ${toPersianDigits(p.stopOrder)} - ${p.recipientName} (${p.district || '—'})</option>`
+        ).join('');
+      }
+
+      const listEl = document.getElementById('route-stops-list');
+      if (!listEl) return;
+
+      if (parcels.length === 0) {
+        listEl.innerHTML = `<div class="bg-white p-6 rounded-2xl text-center text-xs text-slate-500 border">مرسوله‌ای برای چیدمان مسیر وجود ندارد.</div>`;
+        return;
+      }
+
+      listEl.innerHTML = parcels.map((p, idx) => {
+        const st = STATUS_META[p.status] || STATUS_META.READY;
+        const checked = selectedSubsetIds.has(p.id) ? 'checked' : '';
+        return `
+          <div class="bg-white rounded-2xl p-3 border border-slate-200 shadow-xs flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2.5 min-w-0">
+              <input type="checkbox" ${checked} onchange="toggleSubsetSelect('${p.id}', this.checked)" class="w-4 h-4 accent-amber-600 rounded" title="انتخاب برای بهینه‌سازی بخشی" />
+              <div class="w-8 h-8 rounded-xl bg-emerald-800 text-white font-black text-xs flex items-center justify-center shrink-0">
+                ${toPersianDigits(p.stopOrder)}
+              </div>
+              <div onclick="openParcelModal('${p.id}')" class="min-w-0 cursor-pointer">
+                <div class="font-bold text-slate-800 text-xs sm:text-sm truncate">${p.recipientName} <span class="text-[11px] font-normal text-slate-500">(${p.district || 'بدون محله'})</span></div>
+                <div class="text-[11px] text-slate-500 truncate">${p.address}</div>
+                <div class="flex items-center gap-2 mt-1">
+                  <span class="text-[10px] px-2 py-0.5 rounded-full font-bold ${st.color}">${st.label}</span>
+                  ${p.deliveryCode ? `<span class="text-[10px] font-mono bg-amber-100 text-amber-900 px-1.5 py-0.5 rounded font-bold">کد: ${p.deliveryCode}</span>` : ''}
+                </div>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-1 shrink-0">
+              <button onclick="moveStop('${p.id}', -1)" ${idx === 0 ? 'disabled class="opacity-30 p-1.5"' : 'class="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700"'} title="انتقال به بالا">
+                <i data-lucide="chevron-up" class="w-4 h-4"></i>
+              </button>
+              <button onclick="moveStop('${p.id}', 1)" ${idx === parcels.length - 1 ? 'disabled class="opacity-30 p-1.5"' : 'class="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700"'} title="انتقال به پایین">
+                <i data-lucide="chevron-down" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+      lucide.createIcons();
+    }
+
+    function toggleSubsetSelect(id, isChecked) {
+      if (isChecked) selectedSubsetIds.add(id);
+      else selectedSubsetIds.delete(id);
+    }
+
+    function moveStop(parcelId, delta) {
+      const parcels = getActiveSessionParcels();
+      const idx = parcels.findIndex(p => p.id === parcelId);
+      const targetIdx = idx + delta;
+      if (idx < 0 || targetIdx < 0 || targetIdx >= parcels.length) return;
+
+      const temp = parcels[idx].stopOrder;
+      parcels[idx].stopOrder = parcels[targetIdx].stopOrder;
+      parcels[targetIdx].stopOrder = temp;
+      saveDatabase();
+    }
+
+    function applyRouteMode(mode) {
+      const parcels = getActiveSessionParcels();
+      if (parcels.length === 0) return;
+
+      if (mode === 'ORIGINAL' || mode === 'FORWARD') {
+        parcels.sort((a, b) => a.importIndex - b.importIndex);
+      } else if (mode === 'REVERSE') {
+        parcels.sort((a, b) => b.importIndex - a.importIndex);
+      } else if (mode === 'NEIGHBORHOOD') {
+        parcels.sort((a, b) => (a.district || 'ی').localeCompare(b.district || 'ی', 'fa'));
+      } else if (mode === 'GEO_NEAREST') {
+        // Nearest-neighbor heuristic on parcels with coordinates
+        const withCoords = parcels.filter(p => p.lat && p.lng);
+        const withoutCoords = parcels.filter(p => !p.lat || !p.lng);
+        const ordered = [];
+        let current = withCoords.shift();
+        if (current) {
+          ordered.push(current);
+          while (withCoords.length > 0) {
+            withCoords.sort((a, b) => haversine(current.lat, current.lng, a.lat, a.lng) - haversine(current.lat, current.lng, b.lat, b.lng));
+            current = withCoords.shift();
+            ordered.push(current);
+          }
+        }
+        parcels.splice(0, parcels.length, ...ordered, ...withoutCoords);
+      }
+
+      parcels.forEach((p, idx) => { p.stopOrder = idx + 1; });
+      saveDatabase();
+      showToast('چیدمان ایستگاه‌ها بروزرسانی شد (کدهای تحویل و وضعیت‌ها حفظ شدند)');
+      if (!document.getElementById('route-map-wrapper').classList.contains('hidden')) {
+        renderLeafletMap();
+      }
+    }
+
+    function applyStartFromSelectedParcel() {
+      const startId = document.getElementById('route-start-parcel-select').value;
+      const parcels = getActiveSessionParcels();
+      const idx = parcels.findIndex(p => p.id === startId);
+      if (idx <= 0) return;
+
+      const rotated = [...parcels.slice(idx), ...parcels.slice(0, idx)];
+      rotated.forEach((p, i) => { p.stopOrder = i + 1; });
+      saveDatabase();
+      showToast('ایستگاه انتخابی به عنوان نقطه شروع مسیر تنظیم شد');
+    }
+
+    function reverseSelectedSubset() {
+      if (selectedSubsetIds.size < 2) {
+        alert('لطفاً ابتدا حداقل ۲ مرسوله را از لیست پایین تیک بزنید تا بهینه‌سازی بخشی روی آن‌ها اعمال شود.');
+        return;
+      }
+      const parcels = getActiveSessionParcels();
+      const subsetPositions = [];
+      const subsetItems = [];
+
+      parcels.forEach((p, idx) => {
+        if (selectedSubsetIds.has(p.id)) {
+          subsetPositions.push(idx);
+          subsetItems.push(p);
+        }
+      });
+
+      subsetItems.reverse();
+      subsetPositions.forEach((pos, i) => {
+        parcels[pos] = subsetItems[i];
+      });
+      parcels.forEach((p, i) => { p.stopOrder = i + 1; });
+      saveDatabase();
+      showToast('چیدمان زیرمجموعه انتخاب‌شده بروزرسانی شد');
+    }
+
+    function haversine(lat1, lon1, lat2, lon2) {
+      const R = 6371;
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    }
+
+    function toggleRouteView(view) {
+      const mapWrap = document.getElementById('route-map-wrapper');
+      const btnList = document.getElementById('btn-view-list');
+      const btnMap = document.getElementById('btn-view-map');
+
+      if (view === 'MAP') {
+        mapWrap.classList.remove('hidden');
+        btnMap.className = 'px-3 py-1.5 rounded-lg bg-white shadow-sm font-bold text-slate-800';
+        btnList.className = 'px-3 py-1.5 rounded-lg font-medium text-slate-600';
+        setTimeout(renderLeafletMap, 100);
+      } else {
+        mapWrap.classList.add('hidden');
+        btnList.className = 'px-3 py-1.5 rounded-lg bg-white shadow-sm font-bold text-slate-800';
+        btnMap.className = 'px-3 py-1.5 rounded-lg font-medium text-slate-600';
+      }
+    }
+
+    function renderLeafletMap() {
+      const parcels = getActiveSessionParcels().filter(p => p.lat && p.lng);
+      document.getElementById('map-coords-count').textContent = `${toPersianDigits(parcels.length)} ایستگاه دارای مختصات`;
+
+      if (!leafletMap) {
+        leafletMap = L.map('leaflet-map').setView([35.765, 51.365], 12);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '© OpenStreetMap'
+        }).addTo(leafletMap);
+      }
+
+      leafletMap.eachLayer(layer => {
+        if (layer instanceof L.Marker || layer instanceof L.Polyline) {
+          leafletMap.removeLayer(layer);
+        }
+      });
+
+      const latlngs = [];
+      parcels.forEach(p => {
+        latlngs.push([p.lat, p.lng]);
+        const marker = L.marker([p.lat, p.lng]).addTo(leafletMap);
+        marker.bindPopup(`
+          <div style="font-family: Vazirmatn; direction: rtl; text-align: right;">
+            <strong>ایستگاه ${toPersianDigits(p.stopOrder)}: ${p.recipientName}</strong><br/>
+            <span style="font-size:11px;">${p.address}</span><br/>
+            <button onclick="openParcelModal('${p.id}')" style="margin-top:6px; background:#047857; color:white; padding:3px 8px; border-radius:6px; font-size:11px;">باز کردن پرونده</button>
+          </div>
+        `);
+      });
+
+      if (latlngs.length > 1) {
+        L.polyline(latlngs, { color: '#047857', weight: 3, dashArray: '6, 6' }).addTo(leafletMap);
+        leafletMap.fitBounds(latlngs, { padding: [30, 30] });
+      }
+      leafletMap.invalidateSize();
+    }
+
+    /**************************************************************
+     * 9. CAMERA BARCODE SCANNER & OCR SHIPPING LABEL PARSER
+     **************************************************************/
+    function toggleCameraScanner() {
+      const readerEl = document.getElementById('qr-reader');
+      if (html5QrScanner) {
+        html5QrScanner.stop().then(() => {
+          html5QrScanner.clear();
+          html5QrScanner = null;
+          readerEl.classList.add('hidden');
+        });
+        return;
+      }
+
+      readerEl.classList.remove('hidden');
+      html5QrScanner = new Html5Qrcode('qr-reader');
+      html5QrScanner.start(
+        { facingMode: 'environment' },
+        { fps: 10, qrbox: { width: 250, height: 150 } },
+        (decodedText) => {
+          handleScannedBarcode(decodedText);
+        },
+        () => {}
+      ).catch(err => {
+        alert('دسترسی به دوربین امکان‌پذیر نیست یا توسط مرورگر مسدود شده است. می‌توانید بارکد را در کادر پایین وارد کنید.');
+        readerEl.classList.add('hidden');
+        html5QrScanner = null;
+      });
+    }
+
+    function handleScannedBarcode(rawCode) {
+      const code = normalizePersianText(rawCode);
+      if (!code) return;
+
+      const found = getActiveSessionParcels().find(p => p.barcode.toLowerCase() === code.toLowerCase());
+      if (found) {
+        showToast(`مرسوله یافت شد: ایستگاه ${toPersianDigits(found.stopOrder)}`);
+        openParcelModal(found.id);
+      } else {
+        if (confirm(`بارکد «${code}» در لیست فعلی یافت نشد. آیا می‌خواهید آن را به عنوان مرسوله جدید ثبت کنید؟`)) {
+          switchTab('import');
+          document.getElementById('man-barcode').value = code;
+          document.getElementById('man-name').focus();
+        }
+      }
+    }
+
+    function fillSampleOcrText() {
+      document.getElementById('ocr-raw-input').value =
+        `فرستنده: فروشگاه مرکزی\nگیرنده: مهندس بهرام رادان\nتلفن همراه: ۰۹۱۲۵۵۵۸۸۹۹\nبارکد مرسوله: TPX-4059888\nکدپستی: ۱۴۶۵۷۸۹۹۹۰\nنشانی: تهران، سعادت‌آباد، بلوار دریا، خیابان رامشه، پلاک ۱۸، واحد ۵`;
+    }
+
+    function parseOcrLabel() {
+      const raw = normalizePersianText(document.getElementById('ocr-raw-input').value);
+      if (!raw) {
+        alert('ابتدا متن برچسب را وارد کنید یا روی دکمه نمونه بزنید.');
+        return;
+      }
+
+      const phoneMatch = raw.match(/(09\d{9}|989\d{9})/);
+      const postalMatch = raw.match(/\b\d{10}\b/);
+      const barcodeMatch = raw.match(/(TPX-[0-9A-Za-z-]+|\b\d{8,14}\b)/i);
+      const nameMatch = raw.match(/گیرنده\s*[:\-]?\s*([^\n\r]+)/);
+      const addrMatch = raw.match(/(?:آدرس|نشانی)\s*[:\-]?\s*([^\n\r]+)/);
+
+      document.getElementById('ocr-name').value = nameMatch ? nameMatch[1].trim() : 'گیرنده برچسب اسکن‌شده';
+      document.getElementById('ocr-phone').value = phoneMatch ? normalizePhone(phoneMatch[0]) : '';
+      document.getElementById('ocr-barcode').value = barcodeMatch ? barcodeMatch[0] : 'TPX-' + Math.floor(10000 + Math.random()*90000);
+      document.getElementById('ocr-postal').value = postalMatch ? postalMatch[0] : '';
+      document.getElementById('ocr-address').value = addrMatch ? addrMatch[1].trim() : raw;
+
+      document.getElementById('ocr-confirm-box').classList.remove('hidden');
+    }
+
+    function saveOcrConfirmedParcel() {
+      const name = normalizePersianText(document.getElementById('ocr-name').value);
+      const phone = normalizePhone(document.getElementById('ocr-phone').value);
+      const barcode = normalizePersianText(document.getElementById('ocr-barcode').value);
+      const postal = toEnglishDigits(document.getElementById('ocr-postal').value);
+      const address = normalizePersianText(document.getElementById('ocr-address').value);
+
+      const current = getActiveSessionParcels();
+      const nextOrder = current.length + 1;
+      const now = getJalaliNowString();
+
+      appState.parcels.push({
+        id: 'p-ocr-' + Date.now(),
+        sessionId: appState.activeSessionId,
+        importIndex: nextOrder,
+        stopOrder: nextOrder,
+        recipientName: name,
+        phone,
+        barcode,
+        postalCode: postal,
+        district: guessDistrictFromAddress(address),
+        address,
+        lat: null,
+        lng: null,
+        needsAddressReview: false,
+        deliveryCode: '',
+        status: 'READY',
+        notes: 'ثبت شده از طریق اسکن OCR برچسب',
+        visitTimestamp: '',
+        deliveryTimestamp: '',
+        history: [{ status: 'READY', time: now, note: 'استخراج با OCR' }]
+      });
+
+      document.getElementById('ocr-confirm-box').classList.add('hidden');
+      saveDatabase();
+      showToast('مرسوله اسکن‌شده با موفقیت ذخیره شد');
+      switchTab('parcels');
+    }
+
+    /**************************************************************
+     * 10. SESSIONS MANAGEMENT & EXCEL/PRINT EXPORT
+     **************************************************************/
+    function renderSessionsList() {
+      const container = document.getElementById('sessions-list-container');
+      if (!container) return;
+
+      container.innerHTML = appState.sessions.map(s => {
+        const count = appState.parcels.filter(p => p.sessionId === s.id).length;
+        const isCurrent = s.id === appState.activeSessionId;
+        return `
+          <div class="p-3 rounded-xl border ${isCurrent ? 'border-emerald-600 bg-emerald-50/50' : 'border-slate-200 bg-white'} flex items-center justify-between gap-2 text-xs">
+            <div>
+              <div class="font-bold text-slate-800">${s.name} ${isCurrent ? '<span class="text-emerald-700">(فعال)</span>' : ''}</div>
+              <div class="text-slate-500 mt-0.5">ایجاد: ${s.createdAt} • تعداد مرسوله: ${toPersianDigits(count)}</div>
+            </div>
+            <div class="flex items-center gap-1.5">
+              ${!isCurrent ? `<button onclick="activateSession('${s.id}')" class="bg-emerald-600 text-white px-3 py-1.5 rounded-lg font-bold">انتخاب شیفت</button>` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function createNewSession() {
+      const name = normalizePersianText(document.getElementById('new-session-name').value);
+      if (!name) {
+        alert('لطفاً نام شیفت جدید را وارد کنید.');
+        return;
+      }
+      const newId = 'session-' + Date.now();
+      appState.sessions.unshift({
+        id: newId,
+        name,
+        createdAt: getJalaliNowString(),
+        closed: false
+      });
+      appState.activeSessionId = newId;
+      document.getElementById('new-session-name').value = '';
+      saveDatabase();
+      showToast('شیفت جدید ایجاد و فعال شد');
+    }
+
+    function activateSession(id) {
+      appState.activeSessionId = id;
+      saveDatabase();
+      showToast('شیفت فعال تغییر کرد');
+    }
+
+    function toggleMandatoryCodeSetting(checked) {
+      appState.mandatoryDeliveryCode = checked;
+      saveDatabase();
+      showToast('تنظیمات کد تحویل ذخیره شد');
+    }
+
+    function getFilteredExportParcels() {
+      const filter = document.getElementById('export-filter-select').value;
+      const all = getActiveSessionParcels();
+      if (filter === 'DELIVERED') return all.filter(p => p.status === 'DELIVERED');
+      if (filter === 'UNDELIVERED') return all.filter(p => p.status !== 'DELIVERED');
+      if (filter === 'FAILED') return all.filter(p => STATUS_META[p.status]?.group === 'FAILED');
+      return all;
+    }
+
+    function exportRecords(ext) {
+      const list = getFilteredExportParcels();
+      if (list.length === 0) {
+        alert('هیچ رکوردی برای خروجی گرفتن در این فیلتر وجود ندارد.');
+        return;
+      }
+
+      const aoa = [
+        ['شماره ایستگاه', 'نام گیرنده', 'شماره موبایل', 'بارکد مرسوله', 'کد تحویل گیرنده', 'وضعیت نهایی', 'محله', 'کد پستی', 'آدرس کامل', 'زمان مراجعه', 'زمان تحویل قطعی', 'یادداشت مامور']
+      ];
+
+      list.forEach(p => {
+        aoa.push([
+          String(p.stopOrder),
+          p.recipientName,
+          String(p.phone), // Preserves leading zero as string
+          String(p.barcode),
+          String(p.deliveryCode || ''),
+          STATUS_META[p.status]?.label || p.status,
+          p.district || '',
+          String(p.postalCode || ''),
+          p.address,
+          p.visitTimestamp || '',
+          p.deliveryTimestamp || '',
+          p.notes || ''
+        ]);
+      });
+
+      const ws = XLSX.utils.aoa_to_sheet(aoa);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'گزارش_توزیع_تیپاکس');
+      const fileName = `TipaxYar_Report_${Date.now()}.${ext}`;
+      XLSX.writeFile(wb, fileName);
+      showToast(`فایل گزارش ${ext.toUpperCase()} با موفقیت ساخته و دانلود شد`);
+    }
+
+    function prepareAndPrintSheet() {
+      const list = getActiveSessionParcels();
+      const activeSession = appState.sessions.find(s => s.id === appState.activeSessionId);
+      document.getElementById('print-session-subtitle').textContent = `شیفت: ${activeSession ? activeSession.name : ''} | تعداد کل ایستگاه‌ها: ${toPersianDigits(list.length)}`;
+      document.getElementById('print-date-label').textContent = `تاریخ چاپ: ${getJalaliNowString()}`;
+
+      document.getElementById('print-table-body').innerHTML = list.map(p => `
+        <tr>
+          <td class="border border-slate-400 p-1.5 font-bold text-center">${toPersianDigits(p.stopOrder)}</td>
+          <td class="border border-slate-400 p-1.5"><strong>${p.recipientName}</strong><br/>${toPersianDigits(p.phone)}</td>
+          <td class="border border-slate-400 p-1.5 font-mono">${p.barcode}</td>
+          <td class="border border-slate-400 p-1.5">${p.address}</td>
+          <td class="border border-slate-400 p-1.5">${STATUS_META[p.status]?.label || ''}<br/>کد: ${p.deliveryCode || '........'}</td>
+          <td class="border border-slate-400 p-1.5"></td>
+        </tr>
+      `).join('');
+
+      document.getElementById('printable-area').classList.remove('hidden');
+      window.print();
+    }
+
+    function showToast(msg) {
+      const box = document.getElementById('toast-box');
+      document.getElementById('toast-text').textContent = msg;
+      box.classList.remove('hidden');
+      box.classList.add('flex');
+      setTimeout(() => {
+        box.classList.add('hidden');
+        box.classList.remove('flex');
+      }, 3200);
+    }
+
+    // Initialize App on Load
+    window.addEventListener('DOMContentLoaded', () => {
+      loadDatabase();
+      if (appState.parcels.length === 0) {
+        appState.parcels = getSampleParcels(appState.activeSessionId);
+        saveDatabase();
+      } else {
+        refreshAllViews();
+      }
+    });
+  </script>
+</body>
+</html>
