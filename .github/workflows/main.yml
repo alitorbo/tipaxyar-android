@@ -2,7 +2,9 @@ name: Build TipaxYar Android APK
 
 on:
   push:
-    branches: [ "main", "master" ]
+    branches:
+      - main
+      - master
   workflow_dispatch:
 
 jobs:
@@ -10,33 +12,48 @@ jobs:
     runs-on: ubuntu-24.04
 
     steps:
-      - name: 1. Checkout Repository
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: 2. Setup Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22'
 
-      - name: 3. Setup JDK 21
+      - name: Setup JDK 21
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '21'
 
-      - name: 4. Initialize Capacitor Android Project
+      - name: Initialize Capacitor Android Project
         run: |
           mkdir -p www
           if [ -f "index.html" ]; then cp index.html www/index.html; fi
-          if [ ! -f "www/index.html" ]; then echo "<h1>TipaxYar</h1>" > www/index.html; fi
+          if [ ! -f "www/index.html" ]; then echo "TipaxYar" > www/index.html; fi
           npm init -y
           npm install @capacitor/core@6 @capacitor/cli@6 @capacitor/android@6
-          npx cap init "TipaxYar" "ir.tipaxyar.delivery" --web-dir www
+          npx cap init TipaxYar ir.tipaxyar.delivery --web-dir www
           npx cap add android
           npx cap sync android
-          sed -i 's/>TipaxYar</>تیپاکس‌یار</g' android/app/src/main/res/values/strings.xml
+          sed -i 's/TipaxYar/تیپاکس‌یار/g' android/app/src/main/res/values/strings.xml
 
-      - name: 5. Build Installable APK via Gradle
+      - name: Build Installable APK via Gradle
         working-directory: ./android
         env:
-          ANDROID_HOME: /usr/local/lib/android
+          ANDROID_HOME: /usr/local/lib/android/sdk
+          ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+
+      - name: Prepare Output Deliverables
+        run: |
+          mkdir -p output
+          cp android/app/build/outputs/apk/debug/app-debug.apk output/TipaxYar-debug.apk
+
+      - name: Upload APK as Downloadable Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: TipaxYar-Installable-APK
+          path: output/TipaxYar-debug.apk
